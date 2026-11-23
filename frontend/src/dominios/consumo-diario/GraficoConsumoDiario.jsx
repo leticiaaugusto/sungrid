@@ -1,0 +1,192 @@
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Tooltip,
+} from 'chart.js'
+import { Line } from 'react-chartjs-2'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend,
+)
+
+/**
+ * Gráfico da tela Consumo Diário: geração x consumo hora a hora (RF13 / RF14).
+ * Os valores são a potência média de cada hora (kW), que equivale à energia
+ * da hora em kWh. Horas sem leitura ficam vazias (null), não zero (RN21).
+ *
+ * @param {{ dados: { rotulos: string[], geracaoKw: (number|null)[], consumoKw: (number|null)[], picoSolar: string } }} props
+ */
+function GraficoConsumoDiario({ dados }) {
+  const dadosGrafico = {
+    labels: dados.rotulos,
+    datasets: [
+      {
+        label: 'Geração Solar',
+        data: dados.geracaoKw,
+        borderColor: '#f5a000',
+        backgroundColor: 'rgba(247, 160, 0, 0.075)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#f5a000',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+        fill: true,
+        tension: 0.08,
+      },
+      {
+        label: 'Consumo',
+        data: dados.consumoKw,
+        borderColor: '#18b783',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 2.5,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#18b783',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+        borderDash: [5, 4],
+        fill: false,
+        tension: 0.08,
+      },
+    ],
+  }
+
+  const opcoes = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index',
+    },
+    layout: {
+      padding: {
+        top: 28,
+        right: 30,
+        left: 0,
+      },
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: '#17233c',
+        padding: 11,
+        displayColors: true,
+        usePointStyle: true,
+        titleFont: {
+          size: 13,
+          weight: '700',
+        },
+        bodyFont: {
+          size: 12,
+        },
+        callbacks: {
+          label(context) {
+            return ` ${context.dataset.label}: ${context.formattedValue} kW`
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        border: {
+          display: false,
+        },
+        ticks: {
+          color: '#8391a7',
+          font: {
+            size: 12,
+            weight: '500',
+          },
+          padding: 8,
+        },
+      },
+      y: {
+        beginAtZero: true,
+        // folga no topo para os rótulos de valor não serem cortados
+        grace: '12%',
+        border: {
+          display: false,
+          dash: [3, 5],
+        },
+        grid: {
+          color: '#e8edf4',
+          drawTicks: false,
+        },
+        ticks: {
+          color: '#8391a7',
+          font: {
+            size: 12,
+          },
+          padding: 10,
+          callback(value) {
+            return `${value} kW`
+          },
+        },
+      },
+    },
+  }
+
+  return (
+    <section className="daily-chart-card" aria-labelledby="daily-chart-title">
+      <div className="daily-chart-card__header">
+        <div>
+          <h2 id="daily-chart-title">
+            Monitoramento por Hora (Geração vs Consumo)
+          </h2>
+          <p>
+            Visualização do comportamento de carga com pico solar no horário de
+            almoço
+          </p>
+        </div>
+        <span className="solar-peak-badge">
+          Pico Solar Detectado: {dados.picoSolar}
+        </span>
+      </div>
+      <div className="daily-chart-legend" aria-hidden="true">
+        <span>
+          <i className="daily-chart-legend__dot daily-chart-legend__dot--orange" />
+          Geração Solar
+        </span>
+        <span>
+          <i className="daily-chart-legend__dot daily-chart-legend__dot--green" />
+          Consumo
+        </span>
+      </div>
+      <div className="daily-chart-canvas">
+        <Line
+          aria-label="Gráfico horário da geração solar e do consumo diário"
+          data={dadosGrafico}
+          options={opcoes}
+          role="img"
+        />
+      </div>
+      <p className="sr-only">
+        {dados.rotulos
+          .map(
+            (rotulo, indice) =>
+              `${rotulo}: geração ${dados.geracaoKw[indice] ?? 'sem dados'} kW, consumo ${dados.consumoKw[indice] ?? 'sem dados'} kW`,
+          )
+          .join('; ')}
+      </p>
+    </section>
+  )
+}
+
+export default GraficoConsumoDiario

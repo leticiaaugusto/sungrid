@@ -1,0 +1,22 @@
+# Dependências e builds
+node_modules
+dist
+dist-ssr
+
+# Variáveis de ambiente (senhas e segredos NUNCA vão para o Git)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor / sistema
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.local
