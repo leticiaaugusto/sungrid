@@ -4,6 +4,9 @@
  * Todas as rotas usam o prefixo /api/v1 (RNF23) e trafegam JSON.
  * Cada domínio (tela) registra o seu próprio arquivo de rotas.
  */
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import cors from 'cors'
 import express from 'express'
 import { ambiente } from './config/ambiente.js'
@@ -17,6 +20,12 @@ import { dashboardRotas } from './dominios/dashboard/dashboardRotas.js'
 import { economiaRotas, sustentabilidadeRotas } from './dominios/economia/economiaRotas.js'
 import { saudeRotas } from './dominios/saude/saudeRotas.js'
 import { usuariosRotas } from './dominios/usuarios/usuariosRotas.js'
+
+/**
+ * Pasta do site já compilado (`npm run build` no frontend).
+ * Na hospedagem, a própria API entrega o site: um serviço só, um endereço só.
+ */
+const PASTA_SITE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../frontend/dist')
 
 export function criarApp() {
   const app = express()
@@ -41,6 +50,18 @@ export function criarApp() {
   api.use('/health', saudeRotas) //                    Monitoramento
 
   app.use('/api/v1', api)
+
+  // Site (frontend). Só existe depois do build; em desenvolvimento o Vite cuida disso.
+  if (existsSync(PASTA_SITE)) {
+    app.use(express.static(PASTA_SITE))
+    // Qualquer rota do site (ex.: /alertas, /redefinir-senha) devolve o index.html
+    // e o React Router decide a tela. Rotas /api continuam indo para a API.
+    app.use((req, res, next) => {
+      if (req.method !== 'GET' || req.path.startsWith('/api/')) return next()
+      res.sendFile(path.join(PASTA_SITE, 'index.html'))
+    })
+  }
+
   app.use(rotaNaoEncontrada)
   app.use(tratarErros)
   return app
