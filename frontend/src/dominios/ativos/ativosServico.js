@@ -25,10 +25,6 @@ export const ativosServico = {
     return requisicaoApi(`/ativos/${encodeURIComponent(id)}/reiniciar`, { metodo: 'POST', corpo: {} })
   },
 
-  abrirChamado(id) {
-    return requisicaoApi(`/ativos/${encodeURIComponent(id)}/chamados`, { metodo: 'POST', corpo: {} })
-  },
-
   criar(dados) {
     return requisicaoApi('/ativos', { metodo: 'POST', corpo: dados })
   },

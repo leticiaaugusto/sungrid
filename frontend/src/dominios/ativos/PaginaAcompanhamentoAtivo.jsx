@@ -188,11 +188,11 @@ function PaginaAcompanhamentoAtivo() {
   const retorno = retornoAcao.idAtivo === idAtivo ? retornoAcao : { mensagem: '', erro: '' }
   const erro = (carregando ? '' : cadastro.erro) || retorno.erro
 
-  async function executarAcao(acao) {
-    setAcaoPendente(acao)
+  async function executarReinicio() {
+    setAcaoPendente('reiniciar')
     setRetornoAcao({ idAtivo, mensagem: '', erro: '' })
     try {
-      const resposta = acao === 'reiniciar' ? await ativosServico.reiniciar(ativo.id) : await ativosServico.abrirChamado(ativo.id)
+      const resposta = await ativosServico.reiniciar(ativo.id)
       setRetornoAcao({ idAtivo, mensagem: resposta.mensagem, erro: '' })
 
       const [novoAtivo, novoHistorico] = await buscarCadastroEHistorico()
@@ -206,7 +206,7 @@ function PaginaAcompanhamentoAtivo() {
 
   function confirmarReinicio() {
 
-    if (window.confirm(`Confirma o reinício do ativo ${ativo.codigo}?`)) executarAcao('reiniciar')
+    if (window.confirm(`Confirma o reinício do ativo ${ativo.codigo}?`)) executarReinicio()
   }
 
   if (!ativo) {
@@ -264,14 +264,6 @@ function PaginaAcompanhamentoAtivo() {
             type="button"
           >
             {acaoPendente === 'reiniciar' ? 'Reiniciando...' : 'Reiniciar Ativo'}
-          </button>
-          <button
-            className="asset-action-button asset-action-button--primary"
-            disabled={Boolean(acaoPendente)}
-            onClick={() => executarAcao('chamado')}
-            type="button"
-          >
-            {acaoPendente === 'chamado' ? 'Solicitando...' : 'Solucionar Chamado'}
           </button>
         </div>
       </section>
