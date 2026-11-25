@@ -1,15 +1,15 @@
-/**
- * Rotas de chamados.
- * (A abertura de chamado fica em ativoRotas: POST /ativos/:id/chamados.)
- */
+
 import { Router } from 'express'
 import { autenticar } from '../../compartilhado/middlewares/autenticar.js'
+import { somenteAdministrador } from '../../compartilhado/middlewares/somenteAdministrador.js'
 import { ChamadoService } from './ChamadoService.js'
+
+// Esta constante disponibiliza chamadoRotas para outras partes do projeto.
 
 export const chamadoRotas = Router()
 chamadoRotas.use(autenticar)
+chamadoRotas.use(somenteAdministrador)
 
-// GET /api/v1/chamados?status= — lista os chamados abertos e resolvidos
 chamadoRotas.get('/', async (req, res) => {
   res.json(await ChamadoService.listar(req.query))
 })

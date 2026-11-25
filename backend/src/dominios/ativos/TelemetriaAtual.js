@@ -1,15 +1,10 @@
-/**
- * Entidade TelemetriaAtual (tabela `telemetria_atual`).
- *
- * Guarda os valores MAIS RECENTES de cada ativo (no máximo uma linha por
- * ativo), sobrescritos pelo simulador a cada 10 segundos (RNF07). É
- * diferente da tabela `leitura`, que guarda o histórico a cada 15 min (RN43).
- */
 
-/** Sem atualização há mais que isso, o ativo é considerado offline (RN36 / RF27). */
+// Esta constante disponibiliza LIMITE_OFFLINE_SEGUNDOS para outras partes do projeto.
+
 export const LIMITE_OFFLINE_SEGUNDOS = 60
 
-/** Acima disso o valor não é mais "atual" na tela (RN42 / RNF07: 5 a 10 s). */
+// Esta constante disponibiliza LIMITE_DESATUALIZADA_SEGUNDOS para outras partes do projeto.
+
 export const LIMITE_DESATUALIZADA_SEGUNDOS = 30
 
 export class TelemetriaAtual {
@@ -50,7 +45,6 @@ export class TelemetriaAtual {
     })
   }
 
-  /** Há quantos segundos chegou a última atualização (método do diagrama). */
   segundosDesdeAtualizacao(agora = new Date()) {
     return Math.max(0, Math.round((agora - new Date(this.atualizadoEm)) / 1000))
   }

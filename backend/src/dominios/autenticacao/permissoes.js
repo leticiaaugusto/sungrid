@@ -1,13 +1,6 @@
-/**
- * Matriz de permissões por papel (RN09 / RN45 / DP01).
- *
- * O relatório define dois papéis: OPERADOR (Operador de Rede) e
- * ADMINISTRADOR, que herda as operações do operador. A matriz completa
- * ainda está pendente (DP01); por decisão do projeto, os DOIS papéis
- * podem reiniciar ativos (RN45). Para mudar uma permissão, basta editar
- * as listas abaixo: o middleware `autorizar` e `Usuario.temPermissao`
- * leem daqui.
- */
+
+// Esta constante disponibiliza ACOES para outras partes do projeto.
+
 export const ACOES = Object.freeze({
   CONSULTAR_MONITORAMENTO: 'CONSULTAR_MONITORAMENTO',
   REINICIAR_ATIVO: 'REINICIAR_ATIVO',
@@ -26,13 +19,16 @@ const permissoesOperador = [
   ACOES.RESOLVER_ALERTA,
 ]
 
+// Esta constante disponibiliza PERMISSOES_POR_PAPEL para outras partes do projeto.
+
 export const PERMISSOES_POR_PAPEL = Object.freeze({
   OPERADOR: permissoesOperador,
-  // O administrador herda tudo do operador; acrescente aqui ações exclusivas.
+
   ADMINISTRADOR: [...permissoesOperador, ACOES.GERENCIAR_ATIVOS, ACOES.GERENCIAR_USUARIOS],
 })
 
-/** Nome exibido no topo das telas para cada papel. */
+// Esta constante disponibiliza NOMES_PAPEIS para outras partes do projeto.
+
 export const NOMES_PAPEIS = Object.freeze({
   OPERADOR: 'Operador de Rede',
   ADMINISTRADOR: 'Administrador',

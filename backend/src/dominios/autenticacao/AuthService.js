@@ -1,12 +1,4 @@
-/**
- * AuthService: regras de autenticação e conta do usuário.
- *
- * Regras atendidas:
- *  RN01 login com e-mail e senha    RN02 dados obrigatórios do cadastro
- *  RN03 e-mail único                RN04 domínios corporativos (opcional)
- *  RN05 token de uso único          RN06 não revelar se o e-mail existe
- *  RNF14 LGPD: exportar e excluir os próprios dados
- */
+
 import crypto from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { ambiente } from '../../config/ambiente.js'
@@ -24,7 +16,6 @@ import { usuarioRepositorio } from './usuarioRepositorio.js'
 const FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TAMANHO_MINIMO_SENHA = 8
 
-/** Mensagem única para login inválido: não diz se o erro foi no e-mail ou na senha. */
 const MENSAGEM_LOGIN_INVALIDO = 'E-mail ou senha inválidos.'
 
 function texto(valor) {
@@ -48,8 +39,10 @@ function gerarJwt(usuario) {
   })
 }
 
+// Esta constante disponibiliza AuthService para outras partes do projeto.
+
 export const AuthService = {
-  /** RN01: autentica e devolve o token JWT + dados do usuário. */
+
   async login({ email, senha }, ip) {
     email = texto(email)
     if (!email || !senha) {
@@ -73,7 +66,6 @@ export const AuthService = {
     return { token: gerarJwt(usuario), usuario: usuario.paraResposta() }
   },
 
-  /** RN02 / RN03 / RN04: cria a conta e aplica a regra do primeiro administrador. */
   async cadastrar({ nome, email, senha, confirmacaoSenha, perfil }) {
     nome = texto(nome)
     email = texto(email).toLowerCase()
@@ -115,10 +107,6 @@ export const AuthService = {
     return { mensagem, usuario: usuario.paraResposta() }
   },
 
-  /**
-   * RN05 / RN06: gera o link de recuperação. A resposta é sempre a mesma,
-   * exista ou não a conta, para não expor quem está cadastrado.
-   */
   async solicitarRecuperacaoSenha({ email }) {
     email = texto(email)
     if (!FORMATO_EMAIL.test(email)) {
@@ -143,7 +131,6 @@ export const AuthService = {
     }
   },
 
-  /** RN05: grava a nova senha a partir do token do link (uso único). */
   async redefinirSenha({ token, senha, confirmacaoSenha }) {
     if (!token) throw erros.requisicaoInvalida('Link de recuperação inválido.')
     validarSenha(senha, confirmacaoSenha)
@@ -164,14 +151,12 @@ export const AuthService = {
     return { mensagem: 'Senha redefinida com sucesso. Você já pode entrar.' }
   },
 
-  /** RF07: dados do usuário logado para o topo das telas. */
   async usuarioLogado(usuarioId) {
     const usuario = await usuarioRepositorio.buscarPorId(usuarioId)
     if (!usuario) throw erros.naoAutenticado()
     return usuario.paraResposta()
   },
 
-  /** Atualiza nome, cargo e foto da própria conta. */
   async atualizarMinhaConta(usuarioId, dados, ip) {
     const usuario = await usuarioRepositorio.buscarPorId(usuarioId)
     if (!usuario) throw erros.naoAutenticado()
@@ -191,7 +176,6 @@ export const AuthService = {
     return atualizado.paraResposta()
   },
 
-  /** Troca a senha após confirmar a senha atual. */
   async trocarMinhaSenha(usuarioId, dados, ip) {
     const usuario = await usuarioRepositorio.buscarPorId(usuarioId)
     if (!usuario) throw erros.naoAutenticado()
@@ -210,7 +194,6 @@ export const AuthService = {
     return { mensagem: 'Senha alterada com sucesso.' }
   },
 
-  /** Lista usuários para administradores. */
   async listarUsuarios() {
     return (await usuarioRepositorio.listarTodos()).map((usuario) => ({
       ...usuario.paraResposta(),
@@ -218,7 +201,6 @@ export const AuthService = {
     }))
   },
 
-  /** Altera perfil diretamente ou aprova/recusa pedido pendente. */
   async alterarPapel(usuarioIdAlvo, dados, usuarioSolicitante, ip) {
     const usuario = await usuarioRepositorio.buscarPorId(usuarioIdAlvo)
     if (!usuario) throw erros.naoEncontrado('Usuário não encontrado.')
@@ -255,7 +237,6 @@ export const AuthService = {
     return atualizado.paraResposta()
   },
 
-  /** RNF14 (LGPD): devolve os dados pessoais e o histórico de ações do usuário. */
   async exportarDadosPessoais(usuarioId, ip) {
     const usuario = await usuarioRepositorio.buscarPorId(usuarioId)
     if (!usuario) throw erros.naoAutenticado()
@@ -268,11 +249,6 @@ export const AuthService = {
     }
   },
 
-  /**
-   * RNF14 (LGPD): exclui a conta e os dados pessoais.
-   * Se o usuário abriu chamados, a conta é anonimizada em vez de apagada,
-   * para não eliminar registros de atendimento necessários (seção 7).
-   */
   async excluirConta(usuarioId, ip) {
     await emTransacao(async (cliente) => {
       const chamados = await usuarioRepositorio.contarChamadosAbertosPor(usuarioId, cliente)
@@ -284,7 +260,6 @@ export const AuthService = {
       }
     })
 
-    // Sem usuario_id: a conta pode não existir mais.
     await AuditoriaService.registrar({
       acao: ACOES_AUDITADAS.CONTA_EXCLUIDA,
       alvo: { entidade: 'usuario', id: usuarioId },

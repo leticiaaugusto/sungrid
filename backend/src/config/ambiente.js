@@ -1,20 +1,10 @@
-/**
- * Configuração do ambiente.
- *
- * Lê as variáveis do arquivo .env uma única vez e expõe um objeto já
- * convertido (números, booleanos, listas). O resto do código importa
- * `ambiente` em vez de acessar `process.env` diretamente.
- */
+
 import 'dotenv/config'
 
-/**
- * Fuso horário oficial do sistema (RN14 / DP03).
- * Todas as consultas diárias, mensais e semanais usam este fuso para
- * decidir "a que dia pertence" cada leitura.
- */
+// Esta constante disponibiliza FUSO_HORARIO para outras partes do projeto.
+
 export const FUSO_HORARIO = 'America/Sao_Paulo'
 
-// Garante que as datas criadas no Node (ex.: pelo simulador) usem o mesmo fuso.
 process.env.TZ = FUSO_HORARIO
 
 function obrigatoria(nome) {
@@ -32,8 +22,10 @@ function inteiroEntre(nome, padrao, minimo, maximo) {
   return Number.isInteger(valor) && valor >= minimo && valor <= maximo ? valor : padrao
 }
 
+// Esta constante disponibiliza ambiente para outras partes do projeto.
+
 export const ambiente = {
-  // PORT é definida automaticamente por serviços de hospedagem (ex.: Render).
+
   porta: Number(process.env.PORT ?? process.env.PORTA ?? 3000),
   urlFrontend: process.env.URL_FRONTEND ?? 'http://localhost:5173',
 

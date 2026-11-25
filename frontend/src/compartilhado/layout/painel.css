@@ -1,3 +1,4 @@
+/* Esta seção organiza a estrutura principal do painel. */
 .dashboard-shell {
   display: flex;
   min-height: 100vh;
@@ -5,6 +6,7 @@
   color: #17233c;
 }
 
+/* Esta parte monta a barra lateral fixa do painel. */
 .dashboard-sidebar {
   position: sticky;
   top: 0;
@@ -37,6 +39,7 @@
   object-fit: cover;
 }
 
+/* Esta seção organiza os links do menu lateral. */
 .sidebar-navigation {
   display: flex;
   flex-direction: column;

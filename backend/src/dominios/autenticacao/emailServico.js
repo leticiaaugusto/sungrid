@@ -1,10 +1,4 @@
-/**
- * Envio de e-mail com Nodemailer (recuperação de senha — RF04).
- *
- * Se o SMTP não estiver configurado no .env, o link é apenas exibido no
- * terminal da API. Assim dá para testar o fluxo completo sem servidor de
- * e-mail.
- */
+
 import nodemailer from 'nodemailer'
 import { ambiente } from '../../config/ambiente.js'
 
@@ -16,6 +10,8 @@ const transporte = ambiente.email.host
       auth: { user: ambiente.email.usuario, pass: ambiente.email.senha },
     })
   : null
+
+// Esta constante disponibiliza emailServico para outras partes do projeto.
 
 export const emailServico = {
   async enviarRecuperacaoSenha({ para, nome, link, validadeMinutos }) {

@@ -5,6 +5,7 @@
 @import '@fontsource/roboto/latin-ext-500.css';
 @import '@fontsource/roboto/latin-ext-700.css';
 
+/* Esta seção define as cores e a fonte usadas em toda a aplicação. */
 :root {
   font-family: Roboto, Arial, sans-serif;
   color: #17233c;
@@ -27,6 +28,7 @@
   box-sizing: border-box;
 }
 
+/* Esta seção prepara o tamanho básico da página e dos elementos. */
 body {
   min-width: 320px;
   min-height: 100vh;

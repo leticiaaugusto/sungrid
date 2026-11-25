@@ -1,15 +1,7 @@
--- =====================================================================
--- SunGrid - Schema PostgreSQL
--- Base: "SunGrid: Arquitetura e Regras de Negócio" v1.1 (Anexo A - MER,
---       Anexo B - enumerações) e frontend Caioosm/sungrid-frontend.
--- Execução: pgAdmin > banco de destino > Query Tool > executar (F5).
--- =====================================================================
 
+-- Esta parte inicia as alterações no banco.
 BEGIN;
-
--- ---------------------------------------------------------------------
--- usuario (RN01-RN03, RN09, RNF09, RNF11, RNF14)
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela usuario.
 CREATE TABLE usuario (
     id          SERIAL       PRIMARY KEY,
     nome        VARCHAR(120) NOT NULL,
@@ -17,19 +9,17 @@ CREATE TABLE usuario (
     senha_hash  VARCHAR(255) NOT NULL,                 -- hash bcrypt
     cargo       VARCHAR(60),
     papel       VARCHAR(20)  NOT NULL DEFAULT 'OPERADOR'
-                CHECK (papel IN ('OPERADOR', 'ADMINISTRADOR')),
+                CHECK (papel IN ('OPERADOR', 'ADMINISTRADOR', 'SISTEMA')),
     papel_solicitado VARCHAR(20)
                 CHECK (papel_solicitado IN ('OPERADOR', 'ADMINISTRADOR')),
     foto_url    VARCHAR(255),
     criado_em   TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
--- RN03: e-mail único sem diferenciar maiúsculas/minúsculas
+-- Este índice melhora as buscas em uk_usuario_email.
 CREATE UNIQUE INDEX uk_usuario_email ON usuario (LOWER(email));
 
--- ---------------------------------------------------------------------
--- token_recuperacao (RN05, RNF12) - guarda apenas o hash do token
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela token_recuperacao.
 CREATE TABLE token_recuperacao (
     id          SERIAL       PRIMARY KEY,
     usuario_id  INT          NOT NULL
@@ -39,11 +29,10 @@ CREATE TABLE token_recuperacao (
     usado_em    TIMESTAMPTZ
 );
 
+-- Este índice melhora as buscas em idx_token_recuperacao_usuario.
 CREATE INDEX idx_token_recuperacao_usuario ON token_recuperacao (usuario_id);
 
--- ---------------------------------------------------------------------
--- ativo (RN11, RN40, RN41, RN44) - colunas *_max/_nominal/_min = FaixaOperacao
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela ativo.
 CREATE TABLE ativo (
     id                      SERIAL       PRIMARY KEY,
     codigo                  VARCHAR(30)  NOT NULL UNIQUE,
@@ -63,12 +52,10 @@ CREATE TABLE ativo (
     eficiencia_min_pct      NUMERIC
 );
 
--- RN10: busca por nome
+-- Este índice melhora as buscas em idx_ativo_nome.
 CREATE INDEX idx_ativo_nome ON ativo (LOWER(nome));
 
--- ---------------------------------------------------------------------
--- leitura (RN15, RN43, RNF24) - histórico a cada 15 min
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela leitura.
 CREATE TABLE leitura (
     id                      BIGSERIAL    PRIMARY KEY,
     ativo_id                INT          NOT NULL
@@ -83,16 +70,14 @@ CREATE TABLE leitura (
     corrente_a              NUMERIC,
     eficiencia_pct          NUMERIC,
     carga_pct               NUMERIC,
-    -- RNF24 / RN17: uma leitura por ativo e data/hora (evita duplicação)
+
     CONSTRAINT uk_leitura_ativo_data UNIQUE (ativo_id, data_hora)
 );
 
--- RNF06: agregações por período de toda a instalação
+-- Este índice melhora as buscas em idx_leitura_data_hora.
 CREATE INDEX idx_leitura_data_hora ON leitura (data_hora);
 
--- ---------------------------------------------------------------------
--- telemetria_atual (RN42, RNF07) - no máximo 1 linha por ativo
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela telemetria_atual.
 CREATE TABLE telemetria_atual (
     ativo_id                INT          PRIMARY KEY
                             REFERENCES ativo (id) ON DELETE CASCADE,
@@ -106,11 +91,7 @@ CREATE TABLE telemetria_atual (
     carga_pct               NUMERIC
 );
 
--- ---------------------------------------------------------------------
--- alerta (RN29, RN30, RN37, RN38, RNF08)
--- ativo_id nulo = alerta da instalação inteira
--- resolvido_por nulo em resolução automática (ação do sistema)
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela alerta.
 CREATE TABLE alerta (
     id              SERIAL       PRIMARY KEY,
     ativo_id        INT          REFERENCES ativo (id) ON DELETE SET NULL,
@@ -123,20 +104,19 @@ CREATE TABLE alerta (
     criado_em       TIMESTAMPTZ  NOT NULL DEFAULT now(),
     resolvido_em    TIMESTAMPTZ,
     resolvido_por   INT          REFERENCES usuario (id) ON DELETE SET NULL,
-    -- RN38: alerta resolvido precisa de data/hora de resolução
+
     CONSTRAINT ck_alerta_resolucao CHECK (
         (status = 'ATIVO'     AND resolvido_em IS NULL AND resolvido_por IS NULL) OR
         (status = 'RESOLVIDO' AND resolvido_em IS NOT NULL)
     )
 );
 
--- RNF08: filtros por status e prioridade
+-- Este índice melhora as buscas em idx_alerta_filtros.
 CREATE INDEX idx_alerta_filtros ON alerta (status, prioridade, criado_em);
+-- Este índice melhora as buscas em idx_alerta_ativo.
 CREATE INDEX idx_alerta_ativo   ON alerta (ativo_id);
 
--- ---------------------------------------------------------------------
--- chamado (RN48, RN49)
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela chamado.
 CREATE TABLE chamado (
     id              SERIAL       PRIMARY KEY,
     ativo_id        INT          NOT NULL REFERENCES ativo (id),
@@ -147,19 +127,19 @@ CREATE TABLE chamado (
                     CHECK (status IN ('ABERTO', 'EM_ANDAMENTO', 'RESOLVIDO')),
     aberto_em       TIMESTAMPTZ  NOT NULL DEFAULT now(),
     resolvido_em    TIMESTAMPTZ,
-    -- RN49: chamado resolvido precisa de data/hora de encerramento
+
     CONSTRAINT ck_chamado_resolucao CHECK (
         (status <> 'RESOLVIDO' AND resolvido_em IS NULL) OR
         (status =  'RESOLVIDO' AND resolvido_em IS NOT NULL)
     )
 );
 
+-- Este índice melhora as buscas em idx_chamado_ativo.
 CREATE INDEX idx_chamado_ativo  ON chamado (ativo_id);
+-- Este índice melhora as buscas em idx_chamado_status.
 CREATE INDEX idx_chamado_status ON chamado (status);
 
--- ---------------------------------------------------------------------
--- auditoria (RN39, RN46, RNF13) - alvo guardado por entidade + id
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela auditoria.
 CREATE TABLE auditoria (
     id           BIGSERIAL    PRIMARY KEY,
     usuario_id   INT          REFERENCES usuario (id) ON DELETE SET NULL,
@@ -171,21 +151,19 @@ CREATE TABLE auditoria (
     data_hora    TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
+-- Este índice melhora as buscas em idx_auditoria_usuario.
 CREATE INDEX idx_auditoria_usuario   ON auditoria (usuario_id);
+-- Este índice melhora as buscas em idx_auditoria_data_hora.
 CREATE INDEX idx_auditoria_data_hora ON auditoria (data_hora);
 
--- ---------------------------------------------------------------------
--- tarifa (RN27) - escolhida pela data de vigência
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela tarifa.
 CREATE TABLE tarifa (
     id             SERIAL   PRIMARY KEY,
     valor_kwh      NUMERIC  NOT NULL CHECK (valor_kwh >= 0),
     vigente_desde  DATE     NOT NULL UNIQUE
 );
 
--- ---------------------------------------------------------------------
--- configuracao (RN19, RN20, RN25) - linha única
--- ---------------------------------------------------------------------
+-- Esta parte cria a tabela configuracao.
 CREATE TABLE configuracao (
     id                          INT      PRIMARY KEY DEFAULT 1 CHECK (id = 1),
     meta_consumo_diario_kwh     NUMERIC,
@@ -194,4 +172,5 @@ CREATE TABLE configuracao (
     fator_emissao_kgco2_kwh     NUMERIC
 );
 
+-- Esta parte confirma as alterações no banco.
 COMMIT;

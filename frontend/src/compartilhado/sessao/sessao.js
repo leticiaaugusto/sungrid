@@ -1,21 +1,18 @@
-/**
- * Sessão do usuário no navegador.
- *
- * Depois do login, a API devolve um token JWT e os dados do usuário.
- * Guardamos os dois no localStorage para continuar logado ao recarregar
- * a página. O logout (RF06) apenas descarta o token: não há rota na API.
- */
+
 const CHAVE_TOKEN = 'sungrid.token'
 const CHAVE_USUARIO = 'sungrid.usuario'
+// Esta função grava ou atualiza os dados.
 
 export function salvarSessao({ token, usuario }) {
   localStorage.setItem(CHAVE_TOKEN, token)
   localStorage.setItem(CHAVE_USUARIO, JSON.stringify(usuario))
 }
+// Esta função busca os dados necessários.
 
 export function obterToken() {
   return localStorage.getItem(CHAVE_TOKEN)
 }
+// Esta função busca os dados necessários.
 
 export function obterUsuario() {
   try {

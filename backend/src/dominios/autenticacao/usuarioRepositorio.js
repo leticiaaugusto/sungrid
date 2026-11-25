@@ -1,8 +1,8 @@
-/**
- * Repositório de usuários: único ponto que acessa a tabela `usuario`.
- */
+
 import { consultar } from '../../config/banco.js'
 import { Usuario } from './Usuario.js'
+
+// Esta constante disponibiliza usuarioRepositorio para outras partes do projeto.
 
 export const usuarioRepositorio = {
   async buscarPorId(id) {
@@ -10,7 +10,6 @@ export const usuarioRepositorio = {
     return Usuario.deLinha(rows[0])
   },
 
-  /** Busca sem diferenciar maiúsculas/minúsculas (RN03). */
   async buscarPorEmail(email) {
     const { rows } = await consultar('SELECT * FROM usuario WHERE LOWER(email) = LOWER($1)', [email])
     return Usuario.deLinha(rows[0])
@@ -32,7 +31,7 @@ export const usuarioRepositorio = {
   },
 
   async listarTodos() {
-    const { rows } = await consultar('SELECT * FROM usuario ORDER BY criado_em DESC')
+    const { rows } = await consultar("SELECT * FROM usuario WHERE papel <> 'SISTEMA' ORDER BY criado_em DESC")
     return rows.map(Usuario.deLinha)
   },
 
@@ -65,17 +64,12 @@ export const usuarioRepositorio = {
     await executor.query('UPDATE usuario SET senha_hash = $1 WHERE id = $2', [senhaHash, id])
   },
 
-  /** Quantos chamados o usuário abriu (impede a exclusão física da conta). */
   async contarChamadosAbertosPor(id, cliente) {
     const executor = cliente ?? { query: consultar }
     const { rows } = await executor.query('SELECT COUNT(*) AS total FROM chamado WHERE aberto_por = $1', [id])
     return rows[0].total
   },
 
-  /**
-   * Anonimiza a conta (LGPD): apaga nome, e-mail, foto e cargo, mas mantém
-   * o id para não quebrar os chamados abertos por ela.
-   */
   async anonimizar(id, senhaHashAleatoria, cliente) {
     await cliente.query(
       `UPDATE usuario
@@ -87,7 +81,7 @@ export const usuarioRepositorio = {
         WHERE id = $1`,
       [id, senhaHashAleatoria],
     )
-    // Links de recuperação pendentes deixam de valer.
+
     await cliente.query('DELETE FROM token_recuperacao WHERE usuario_id = $1', [id])
   },
 

@@ -1,11 +1,11 @@
-/**
- * Repositório de chamados (tabela `chamado`).
- */
+
 import { consultar } from '../../config/banco.js'
 import { Chamado } from './Chamado.js'
 
+// Esta constante disponibiliza chamadoRepositorio para outras partes do projeto.
+
 export const chamadoRepositorio = {
-  /** @param {Chamado} chamado */
+
   async inserir(chamado) {
     const { rows } = await consultar(
       `INSERT INTO chamado (ativo_id, alerta_id, aberto_por, descricao, status, aberto_em)
@@ -16,7 +16,6 @@ export const chamadoRepositorio = {
     return Chamado.deLinha(rows[0])
   },
 
-  /** Lista com o código do ativo e o nome de quem abriu. */
   async listar({ status = null } = {}) {
     const { rows } = await consultar(
       `SELECT c.*, a.codigo AS ativo_codigo, a.nome AS ativo_nome, u.nome AS aberto_por_nome

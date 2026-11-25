@@ -1,10 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { estaLogado } from './sessao.js'
+import { estaLogado, obterUsuario } from './sessao.js'
 
-/**
- * Protege as telas internas (RN08): sem sessão, volta para o login e
- * guarda a tela que o usuário tentou abrir para voltar depois de entrar.
- */
 function RotaProtegida() {
   const localizacao = useLocation()
 
@@ -16,3 +12,12 @@ function RotaProtegida() {
 }
 
 export default RotaProtegida
+
+// Esta rota permite que operadores vejam apenas os módulos de ativos.
+export function RotaAdministrador() {
+  const usuario = obterUsuario()
+  if (usuario?.papel === 'OPERADOR') {
+    return <Navigate to="/ativos" replace />
+  }
+  return <Outlet />
+}

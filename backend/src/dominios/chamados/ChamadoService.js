@@ -1,6 +1,4 @@
-/**
- * ChamadoService: abertura e consulta de chamados (RF33 — RN48 a RN50).
- */
+
 import { erros } from '../../compartilhado/erros.js'
 import { STATUS_ALERTA } from '../alertas/Alerta.js'
 import { alertaRepositorio } from '../alertas/alertaRepositorio.js'
@@ -12,14 +10,12 @@ import { chamadoRepositorio } from './chamadoRepositorio.js'
 
 const TAMANHO_MAXIMO_DESCRICAO = 500
 
+// Esta constante disponibiliza ChamadoService para outras partes do projeto.
+
 export const ChamadoService = {
-  /**
-   * Abre um chamado para o ativo (botão "Solucionar Chamado").
-   * Se a tela não mandar descrição nem alerta, o chamado é vinculado ao
-   * alerta ativo mais recente do ativo (quando houver).
-   */
+
   async abrir(ativoId, usuarioId, { descricao, alertaId } = {}, ip) {
-    const ativo = await ativoRepositorio.buscarPorId(ativoId)
+    const ativo = await ativoRepositorio.buscarPorId(ativoId, usuarioId)
     if (!ativo) throw erros.naoEncontrado('Ativo não encontrado.')
 
     let alerta = null

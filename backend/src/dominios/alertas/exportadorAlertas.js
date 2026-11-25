@@ -1,6 +1,4 @@
-/**
- * Geração do relatório de alertas em CSV, XLSX (ExcelJS) e PDF (PDFKit) — RNF21.
- */
+
 import ExcelJS from 'exceljs'
 import PDFDocument from 'pdfkit'
 import { FUSO_HORARIO } from '../../config/ambiente.js'
@@ -29,7 +27,6 @@ const COLUNAS = [
   { titulo: 'Resolvido em', largura: 18, valor: (alerta) => dataHora(alerta.resolvidoEm) },
 ]
 
-/** Evita que o Excel interprete textos iniciados por = + - @ como fórmula. */
 function celulaCsvSegura(valor) {
   const texto = String(valor ?? '')
   const seguro = /^[\t\r\n ]*[=+\-@]/.test(texto) ? `'${texto}` : texto
@@ -41,7 +38,7 @@ function gerarCsv(alertas) {
     COLUNAS.map((coluna) => coluna.titulo),
     ...alertas.map((alerta) => COLUNAS.map((coluna) => coluna.valor(alerta))),
   ]
-  // O caractere BOM (\uFEFF) faz o Excel abrir acentos corretamente; ";" é o separador do Excel em pt-BR.
+
   const texto = `\uFEFF${linhas.map((linha) => linha.map(celulaCsvSegura).join(';')).join('\r\n')}`
   return Buffer.from(texto, 'utf-8')
 }
@@ -76,7 +73,6 @@ function gerarPdf(alertas, filtros) {
       )
       .moveDown()
 
-    // Tabela simples: larguras proporcionais à largura útil da página.
     const larguraUtil = documento.page.width - 72
     const totalLarguras = COLUNAS.reduce((soma, coluna) => soma + coluna.largura, 0)
     const larguras = COLUNAS.map((coluna) => (coluna.largura / totalLarguras) * larguraUtil)
@@ -108,10 +104,11 @@ function gerarPdf(alertas, filtros) {
   })
 }
 
+// Esta constante disponibiliza exportadorAlertas para outras partes do projeto.
+
 export const exportadorAlertas = {
   formatosSuportados: ['csv', 'xlsx', 'pdf'],
 
-  /** @returns {Promise<{ conteudo: Buffer, tipoMime: string, nomeArquivo: string }>} */
   async gerar(alertas, formato, filtros) {
     const data = new Date().toISOString().slice(0, 10)
     const nomeArquivo = `relatorio-alertas-${data}.${formato}`

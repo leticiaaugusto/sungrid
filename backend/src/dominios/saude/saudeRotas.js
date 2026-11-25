@@ -1,13 +1,12 @@
-/**
- * Rota de monitoramento (RNF15): verifica se a API e o banco estão no ar.
- */
+
 import { Router } from 'express'
 import { consultar } from '../../config/banco.js'
 import { controleSimulacao } from '../simulador/controleSimulacao.js'
 
+// Esta constante disponibiliza saudeRotas para outras partes do projeto.
+
 export const saudeRotas = Router()
 
-// GET /api/v1/health
 saudeRotas.get('/', async (_req, res) => {
   try {
     await consultar('SELECT 1')

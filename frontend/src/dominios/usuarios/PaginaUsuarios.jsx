@@ -6,13 +6,14 @@ import { formatarDataHora, mensagemDeErro } from '../../compartilhado/utilitario
 import { usuariosServico } from './usuariosServico.js'
 
 const NOMES_PAPEIS = { OPERADOR: 'Operador de Rede', ADMINISTRADOR: 'Administrador' }
+// Esta tela monta a página Usuarios.
 
-/** Tela administrativa de usuários, perfis e pedidos pendentes. */
 function PaginaUsuarios() {
   const usuarioAtual = obterUsuario()
   const [usuarios, setUsuarios] = useState([])
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
+// Esta função grava ou atualiza os dados.
 
   async function atualizar() {
     setErro('')
@@ -22,6 +23,8 @@ function PaginaUsuarios() {
       setErro(mensagemDeErro(falha, 'Não foi possível carregar os usuários.'))
     }
   }
+
+  // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
     let ativo = true

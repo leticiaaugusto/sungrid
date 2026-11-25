@@ -1,4 +1,5 @@
--- Migração segura para perfis solicitados no cadastro.
+
+-- Esta parte altera a tabela usuario.
 ALTER TABLE usuario
   ADD COLUMN IF NOT EXISTS papel_solicitado VARCHAR(20);
 

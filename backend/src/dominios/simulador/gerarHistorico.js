@@ -1,17 +1,4 @@
-/**
- * Gera o HISTÓRICO simulado da loja (leituras de 15 em 15 minutos e os
- * alertas que teriam acontecido), para as telas já abrirem com dados de
- * dias e meses anteriores.
- *
- * Uso (na pasta backend):
- *   npm run simulador:historico                 -> últimos 60 dias
- *   npm run simulador:historico -- --dias=90    -> últimos 90 dias
- *   npm run simulador:historico -- --limpar     -> apaga leituras/alertas antes
- *
- * Usa o MESMO perfil da loja do simulador em tempo real (perfilLoja.js).
- * Os alertas são calculados em memória com as mesmas regras do
- * AlertaService e gravados de uma vez (bem mais rápido no Supabase).
- */
+
 import { consultar, emTransacao, pool } from '../../config/banco.js'
 import { Alerta, STATUS_ALERTA } from '../alertas/Alerta.js'
 import { AlertaService } from '../alertas/AlertaService.js'
@@ -23,11 +10,12 @@ import { TelemetriaAtual } from '../ativos/TelemetriaAtual.js'
 import { telemetriaRepositorio } from '../ativos/telemetriaRepositorio.js'
 import { TIPO_ATIVO_CONSUMO } from '../consumo/fontesDeEnergia.js'
 import { parametrosRepositorio } from '../parametros/parametrosRepositorio.js'
+import { usuarioRepositorio } from '../autenticacao/usuarioRepositorio.js'
 import { proximaCargaBateria, valoresDosAtivos } from './perfilLoja.js'
 
 const MINUTOS_POR_LEITURA = 15
-const AMOSTRAS_POR_BLOCO = 3 // 3 amostras de 5 min para calcular a energia do bloco
-/** Alertas que exigem operador são "resolvidos" no histórico depois deste tempo. */
+const AMOSTRAS_POR_BLOCO = 3
+
 const MINUTOS_PARA_OPERADOR_RESOLVER = 50
 
 function lerArgumentos() {
@@ -41,7 +29,8 @@ const arredondar3 = (valor) => (typeof valor === 'number' ? Math.round(valor * 1
 async function principal() {
   const { dias, limpar } = lerArgumentos()
 
-  const ativos = await ativoRepositorio.listarTodos()
+  const usuarioSimulador = await usuarioRepositorio.buscarPorEmail('simulador@sungrid.local')
+  const ativos = await ativoRepositorio.listarTodos(usuarioSimulador?.id)
   if (ativos.length === 0) {
     throw new Error('Nenhum ativo cadastrado. Rode antes o arquivo banco/03_dados_iniciais.sql.')
   }
@@ -59,13 +48,11 @@ async function principal() {
     throw new Error('Já existem leituras no banco. Para gerar de novo, use: npm run simulador:historico -- --limpar')
   }
 
-  // Usuário que "resolve" no histórico os alertas que exigem operador (se existir).
   const { rows: usuarios } = await consultar(
-    "SELECT id FROM usuario ORDER BY (papel = 'ADMINISTRADOR') DESC, id LIMIT 1",
+    "SELECT id FROM usuario WHERE papel <> 'SISTEMA' ORDER BY (papel = 'ADMINISTRADOR') DESC, id LIMIT 1",
   )
   const operadorId = usuarios[0]?.id ?? null
 
-  // Intervalo: da meia-noite de N dias atrás até o último bloco de 15 min fechado.
   const inicio = new Date()
   inicio.setHours(0, 0, 0, 0)
   inicio.setDate(inicio.getDate() - dias)
@@ -86,7 +73,7 @@ async function principal() {
       return [ativo.id, dias * horasPorDia]
     }),
   )
-  const alertasAbertos = new Map() // "TIPO:ativoId" -> Alerta
+  const alertasAbertos = new Map()
   const alertasGerados = []
   let leiturasDoDia = []
   let totalLeituras = 0
@@ -125,7 +112,7 @@ async function principal() {
     fimDoBloco <= fim;
     fimDoBloco = new Date(fimDoBloco.getTime() + MINUTOS_POR_LEITURA * 60_000)
   ) {
-    // Amostras dentro do bloco para calcular a energia (potência média x 0,25 h).
+
     const somaGerada = new Map()
     const somaConsumida = new Map()
     let valores
@@ -163,7 +150,6 @@ async function principal() {
         horasOperacao.set(ativo.id, horasOperacao.get(ativo.id) + horas)
       }
 
-      // Mesmas regras do AlertaService, avaliadas em memória.
       const telemetria = new TelemetriaAtual({ ativoId: ativo.id, atualizadoEm: fimDoBloco, ...valor })
       const violadas = condicoesVioladas(ativo, telemetria)
       for (const tipo of ['TEMPERATURA_ELEVADA', 'PICO_TENSAO', 'BATERIA_BAIXA']) {
@@ -186,7 +172,6 @@ async function principal() {
     }
     ultimosValores = valores
 
-    // Grava um dia por vez (96 blocos x ativos).
     if (fimDoBloco.getHours() === 0 && fimDoBloco.getMinutes() === 0) {
       await leituraRepositorio.inserirVarias(leiturasDoDia)
       totalLeituras += leiturasDoDia.length
@@ -197,7 +182,6 @@ async function principal() {
   await leituraRepositorio.inserirVarias(leiturasDoDia)
   totalLeituras += leiturasDoDia.length
 
-  // Alertas (em lotes de 200).
   for (let i = 0; i < alertasGerados.length; i += 200) {
     const lote = alertasGerados.slice(i, i + 200)
     const parametros = []
@@ -222,7 +206,6 @@ async function principal() {
     )
   }
 
-  // Horas de operação, telemetria atual e status dos ativos.
   for (const ativo of ativos) {
     await ativoRepositorio.somarHorasOperacao(ativo.id, horasOperacao.get(ativo.id))
     const valor = ultimosValores.get(ativo.id)

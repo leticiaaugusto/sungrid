@@ -1,20 +1,21 @@
--- =====================================================================
--- SunGrid - Segurança no Supabase (rodar SOMENTE no Supabase)
---
--- O Supabase publica automaticamente uma API para as tabelas do schema
--- "public". Como quem acessa o banco é a nossa API em Express, ligamos o
--- RLS sem nenhuma política: ninguém lê as tabelas por essa API pública.
--- A nossa API continua com acesso total porque conecta com o usuário
--- "postgres", dono das tabelas (o dono não é bloqueado pelo RLS).
--- =====================================================================
 
+-- Esta parte altera a tabela usuario.
 ALTER TABLE usuario           ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela token_recuperacao.
 ALTER TABLE token_recuperacao ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela ativo.
 ALTER TABLE ativo             ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela leitura.
 ALTER TABLE leitura           ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela telemetria_atual.
 ALTER TABLE telemetria_atual  ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela alerta.
 ALTER TABLE alerta            ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela chamado.
 ALTER TABLE chamado           ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela auditoria.
 ALTER TABLE auditoria         ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela tarifa.
 ALTER TABLE tarifa            ENABLE ROW LEVEL SECURITY;
+-- Esta parte altera a tabela configuracao.
 ALTER TABLE configuracao      ENABLE ROW LEVEL SECURITY;

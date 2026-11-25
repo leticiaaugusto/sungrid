@@ -1,9 +1,4 @@
-/**
- * Ponto de entrada da API do SunGrid.
- *
- * Sobe o servidor HTTP, agenda o job de detecção de offline e, se
- * SIMULADOR_ATIVO=true no .env, liga o simulador da loja.
- */
+
 import { ambiente } from './config/ambiente.js'
 import { pool } from './config/banco.js'
 import { criarApp } from './app.js'
@@ -11,7 +6,7 @@ import { SimuladorService } from './dominios/simulador/SimuladorService.js'
 import { agendarDeteccaoOffline } from './jobs/detectarOffline.js'
 
 async function iniciar() {
-  // Testa a conexão antes de aceitar requisições.
+
   await pool.query('SELECT 1')
 
   const app = criarApp()
@@ -27,7 +22,6 @@ async function iniciar() {
     console.info('[simulador] desligado (SIMULADOR_ATIVO=false).')
   }
 
-  // Encerramento limpo com Ctrl+C.
   const encerrar = async () => {
     console.info('\nEncerrando...')
     SimuladorService.parar()

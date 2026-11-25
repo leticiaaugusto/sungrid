@@ -1,17 +1,8 @@
-/**
- * Cliente HTTP da API do SunGrid.
- *
- * Todas as telas falam com a API por aqui. Responsabilidades:
- *  - montar a URL com o prefixo /api/v1;
- *  - enviar o token JWT no cabeçalho Authorization;
- *  - transformar as respostas de erro { mensagem, campo } em ErroApi;
- *  - se a sessão expirar (401), sair e voltar para o login.
- */
+
 import { encerrarSessao, obterToken } from '../sessao/sessao.js'
 
 const urlBase = (import.meta.env.VITE_API_URL || '/api/v1').replace(/\/+$/, '')
 
-/** Erro vindo da API, com o campo do formulário relacionado (quando houver). */
 export class ErroApi extends Error {
   constructor(mensagem, { status, campo } = {}) {
     super(mensagem)
@@ -20,6 +11,7 @@ export class ErroApi extends Error {
     this.campo = campo
   }
 }
+// Esta função organiza os dados antes de enviá-los ou exibí-los.
 
 function montarCabecalhos(temCorpo, cabecalhosExtras = {}) {
   const token = obterToken()
@@ -29,17 +21,16 @@ function montarCabecalhos(temCorpo, cabecalhosExtras = {}) {
     ...cabecalhosExtras,
   }
 }
+// Esta função prepara ou formata o valor para exibição.
 
 async function tratarErro(resposta, caminho) {
   let dados = null
   try {
     dados = await resposta.json()
   } catch {
-    // resposta sem JSON
+
   }
 
-  // Sessão expirada em uma tela interna: limpa e volta ao login.
-  // (Na própria tela de login, 401 é só "senha errada".)
   if (resposta.status === 401 && obterToken() && !caminho.startsWith('/auth/login')) {
     encerrarSessao()
     window.location.replace('/login?sessao=expirada')
@@ -50,6 +41,7 @@ async function tratarErro(resposta, caminho) {
     campo: dados?.campo,
   })
 }
+// Esta função envia ou recebe dados da API.
 
 async function enviar(caminho, opcoes) {
   try {
@@ -59,11 +51,8 @@ async function enviar(caminho, opcoes) {
   }
 }
 
-/**
- * Faz uma requisição e devolve o JSON da resposta.
- * @param {string} caminho ex.: '/alertas?status=ativo'
- * @param {{ metodo?: string, corpo?: object }} [opcoes]
- */
+// Esta função envia chamadas à API e trata a resposta.
+// Esta função envia ou recebe dados da API.
 export async function requisicaoApi(caminho, { metodo = 'GET', corpo } = {}) {
   const resposta = await enviar(caminho, {
     method: metodo,
@@ -75,10 +64,8 @@ export async function requisicaoApi(caminho, { metodo = 'GET', corpo } = {}) {
   const texto = await resposta.text()
   return texto ? JSON.parse(texto) : null
 }
+// Esta função envia ou recebe dados da API.
 
-/**
- * Baixa um arquivo gerado pela API (ex.: relatório de alertas) e salva no computador.
- */
 export async function baixarArquivoApi(caminho, nomePadrao = 'arquivo') {
   const resposta = await enviar(caminho, { headers: montarCabecalhos(false) })
   if (!resposta.ok) await tratarErro(resposta, caminho)

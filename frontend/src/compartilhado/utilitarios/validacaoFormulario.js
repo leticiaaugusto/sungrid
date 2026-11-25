@@ -1,8 +1,5 @@
-/**
- * Validação dos formulários de autenticação usando as regras nativas do
- * HTML (required, type="email", minLength). Devolve um objeto
- * { nomeDoCampo: 'mensagem de erro' } com os campos inválidos.
- */
+// Esta função busca os dados necessários.
+
 export function obterErrosDoFormulario(formulario) {
   const erros = {}
 

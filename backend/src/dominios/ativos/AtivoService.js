@@ -1,8 +1,4 @@
-/**
- * AtivoService: tela Acompanhamento de Ativo e busca global de ativos.
- *
- * Regras atendidas: RN10, RN11, RN40–RN47.
- */
+
 import { erros } from '../../compartilhado/erros.js'
 import { arredondar, hoje, somarDias } from '../../compartilhado/tempo.js'
 import { ACOES_AUDITADAS } from '../auditoria/Auditoria.js'
@@ -14,10 +10,11 @@ import { telemetriaRepositorio } from './telemetriaRepositorio.js'
 
 const DIAS_HISTORICO_PADRAO = 7
 const DIAS_HISTORICO_MAXIMO = 31
+// Esta função busca os dados necessários.
 
-async function buscarOuFalhar(id) {
+async function buscarOuFalhar(id, usuarioId) {
   const numero = Number(id)
-  const ativo = Number.isInteger(numero) ? await ativoRepositorio.buscarPorId(numero) : null
+  const ativo = Number.isInteger(numero) ? await ativoRepositorio.buscarPorId(numero, usuarioId) : null
   if (!ativo) throw erros.naoEncontrado('Ativo não encontrado.')
   return ativo
 }
@@ -60,11 +57,13 @@ function validarDadosAtivo(dados) {
   }
 }
 
+// Esta constante disponibiliza AtivoService para outras partes do projeto.
+
 export const AtivoService = {
-  /** Busca global do cabeçalho (RF09 / RN10): por código ou nome. */
-  async buscar(termo) {
+
+  async buscar(termo, usuarioId) {
     termo = typeof termo === 'string' ? termo.trim() : ''
-    const registros = await ativoRepositorio.listarComTelemetria(termo)
+    const registros = await ativoRepositorio.listarComTelemetria(termo, usuarioId)
     return registros.map(({ ativo, potenciaAtualKw, atualizadoEm }) => {
       const resposta = ativo.paraResposta()
       const agora = Date.now()
@@ -78,18 +77,12 @@ export const AtivoService = {
     })
   },
 
-  /** Dados cadastrais, status e manutenção (RF28 / RF30). */
-  async detalhar(id) {
-    return (await buscarOuFalhar(id)).paraResposta()
+  async detalhar(id, usuarioId) {
+    return (await buscarOuFalhar(id, usuarioId)).paraResposta()
   },
 
-  /**
-   * Última telemetria do ativo + avaliação da faixa de operação (RF29).
-   * RN42: informa quando a leitura ocorreu e marca se está desatualizada,
-   * para a tela não apresentar dado antigo como atual.
-   */
-  async telemetria(id) {
-    const ativo = await buscarOuFalhar(id)
+  async telemetria(id, usuarioId) {
+    const ativo = await buscarOuFalhar(id, usuarioId)
     const telemetria = await telemetriaRepositorio.buscarPorAtivo(ativo.id)
     if (!telemetria) {
       return { ativoId: ativo.id, disponivel: false, desatualizada: true, mensagem: 'Ativo ainda não enviou telemetria.' }
@@ -101,7 +94,7 @@ export const AtivoService = {
       atualizadoEm: telemetria.atualizadoEm,
       segundosDesdeAtualizacao: telemetria.segundosDesdeAtualizacao(),
       desatualizada: telemetria.estaDesatualizada(),
-      // Potência principal: gerada para painel/inversor, consumida para os demais.
+
       grandezaPrincipal: ativo.ehGerador() ? 'gerada' : 'consumida',
       valores: {
         potenciaGeradaKw: arredondar(telemetria.potenciaGeradaKw, 2),
@@ -116,9 +109,8 @@ export const AtivoService = {
     }
   },
 
-  /** Histórico diário de potência dos últimos N dias (RF31 / RN43). */
-  async historico(id, dias = DIAS_HISTORICO_PADRAO) {
-    const ativo = await buscarOuFalhar(id)
+  async historico(id, dias = DIAS_HISTORICO_PADRAO, usuarioId) {
+    const ativo = await buscarOuFalhar(id, usuarioId)
     dias = Number(dias)
     if (!Number.isInteger(dias) || dias < 1 || dias > DIAS_HISTORICO_MAXIMO) {
       throw erros.requisicaoInvalida(`Informe dias entre 1 e ${DIAS_HISTORICO_MAXIMO}.`, 'dias')
@@ -135,7 +127,7 @@ export const AtivoService = {
       const registro = porDia.get(dia)
       serie.push({
         data: dia,
-        // null = dia sem leituras (diferente de zero)
+
         potenciaMediaKw: arredondar(registro?.potenciaMediaKw ?? null, 2),
         potenciaMaximaKw: arredondar(registro?.potenciaMaximaKw ?? null, 2),
         energiaKwh: arredondar(registro?.energiaKwh ?? null, 1),
@@ -144,13 +136,12 @@ export const AtivoService = {
     return { ativoId: ativo.id, grandeza, dias: serie }
   },
 
-  /** Criação de ativo exclusiva para administradores. */
   async criar(dados, usuarioId, ip) {
     const normalizados = validarDadosAtivo(dados)
-    if (await ativoRepositorio.buscarCodigo(normalizados.codigo)) {
+    if (await ativoRepositorio.buscarCodigo(normalizados.codigo, usuarioId)) {
       throw erros.conflito('Já existe um ativo com este código.', 'codigo')
     }
-    const ativo = await ativoRepositorio.inserir(normalizados)
+    const ativo = await ativoRepositorio.inserir(normalizados, usuarioId)
     await AuditoriaService.registrar({
       usuarioId,
       acao: ACOES_AUDITADAS.ATIVO_CRIADO,
@@ -160,15 +151,14 @@ export const AtivoService = {
     return ativo.paraResposta()
   },
 
-  /** Edição de ativo exclusiva para administradores. */
   async editar(id, dados, usuarioId, ip) {
-    const atual = await buscarOuFalhar(id)
+    const atual = await buscarOuFalhar(id, usuarioId)
     const normalizados = validarDadosAtivo(dados)
-    const comMesmoCodigo = await ativoRepositorio.buscarCodigo(normalizados.codigo)
+    const comMesmoCodigo = await ativoRepositorio.buscarCodigo(normalizados.codigo, usuarioId)
     if (comMesmoCodigo && comMesmoCodigo.id !== atual.id) {
       throw erros.conflito('Já existe um ativo com este código.', 'codigo')
     }
-    const ativo = await ativoRepositorio.atualizar(atual.id, normalizados)
+    const ativo = await ativoRepositorio.atualizar(atual.id, normalizados, usuarioId)
     await AuditoriaService.registrar({
       usuarioId,
       acao: ACOES_AUDITADAS.ATIVO_EDITADO,
@@ -178,14 +168,8 @@ export const AtivoService = {
     return ativo.paraResposta()
   },
 
-  /**
-   * Reinício remoto (RF32 — RN45, RN46, RN47).
-   * RN46: a SOLICITAÇÃO e o RESULTADO são registrados separadamente na auditoria.
-   * DECISÃO (DP22): no modo simulado, o comando vai para o simulador, que
-   * zera a potência do ativo por 20 s e encerra as falhas simuladas do dia.
-   */
   async reiniciar(id, usuarioId, ip) {
-    const ativo = await buscarOuFalhar(id)
+    const ativo = await buscarOuFalhar(id, usuarioId)
     const alvo = { entidade: 'ativo', id: ativo.id }
 
     await AuditoriaService.registrar({ usuarioId, acao: ACOES_AUDITADAS.REINICIO_SOLICITADO, alvo, ip })

@@ -3,8 +3,6 @@ import { Link, NavLink } from 'react-router-dom'
 import Icone from '../componentes/Icone.jsx'
 import { formatarNumero, formatarTempoDecorrido } from '../utilitarios/formatacao.js'
 
-// Tempos da animação do card de alerta: ao passar o mouse ele é marcado
-// como visto, some e volta a aparecer depois de 5 minutos.
 const ATRASO_CONFIRMACAO_MS = 1200
 const DURACAO_SUMIR_MS = 800
 const REEXIBIR_DEPOIS_MS = 5 * 60 * 1000
@@ -17,13 +15,8 @@ const ITENS_MENU = [
   { rotulo: 'Acompanhamento de Ativo', caminho: '/ativos', icone: 'atividade' },
 ]
 
-/**
- * Menu lateral (RF08) com o card de alertas ativos e a pegada de carbono (RF12).
- *
- * @param {{ alertasAtivos: Array|null, carbono: { co2EvitadoKg: number }|null }} props
- */
 function MenuLateral({ alertasAtivos, carbono, usuario }) {
-  // A API devolve os alertas do mais recente para o mais antigo.
+
   const ultimoAlerta = alertasAtivos?.[0]
   const idAlerta = ultimoAlerta?.id
   const [estadoCard, setEstadoCard] = useState({ idAlerta: null, fase: 'visivel' })
@@ -60,15 +53,18 @@ function MenuLateral({ alertasAtivos, carbono, usuario }) {
     if (fase === 'visivel') window.clearTimeout(temporizadorConfirmacao.current)
   }
 
-  // As classes CSS do protótipo usam os nomes em inglês das fases.
   const classeFase = { visivel: 'visible', sumindo: 'fading', oculto: 'hidden' }[fase]
   const quantidade = alertasAtivos ? alertasAtivos.length : '—'
   const itensVisiveis = [
-    ...ITENS_MENU,
-    { rotulo: 'Minha Conta', caminho: '/configuracoes', icone: 'usuario' },
-    ...(usuario?.papel === 'ADMINISTRADOR'
-      ? [{ rotulo: 'Usuários', caminho: '/usuarios', icone: 'usuarios' }]
-      : []),
+    ...(usuario?.papel === 'OPERADOR'
+      ? [{ rotulo: 'Acompanhamento de Ativo', caminho: '/ativos', icone: 'atividade' }]
+      : [
+          ...ITENS_MENU,
+          { rotulo: 'Minha Conta', caminho: '/configuracoes', icone: 'usuario' },
+          ...(usuario?.papel === 'ADMINISTRADOR'
+            ? [{ rotulo: 'Usuários', caminho: '/usuarios', icone: 'usuarios' }]
+            : []),
+        ]),
   ]
 
   const cabecalhoCard = (

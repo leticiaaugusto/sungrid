@@ -1,18 +1,20 @@
-/**
- * Repositório de ativos: tabelas `ativo` e `leitura` (histórico por ativo).
- */
+
 import { FUSO_HORARIO } from '../../config/ambiente.js'
 import { consultar } from '../../config/banco.js'
 import { Ativo } from './Ativo.js'
 
+// Esta constante disponibiliza ativoRepositorio para outras partes do projeto.
+
 export const ativoRepositorio = {
-  async listarTodos() {
-    const { rows } = await consultar('SELECT * FROM ativo ORDER BY codigo')
+  async listarTodos(usuarioId = null) {
+    const sql = usuarioId
+      ? 'SELECT * FROM ativo WHERE usuario_id = $1 ORDER BY codigo'
+      : 'SELECT * FROM ativo ORDER BY codigo'
+    const { rows } = await consultar(sql, usuarioId ? [usuarioId] : [])
     return rows.map(Ativo.deLinha)
   },
 
-  /** Lista completa com a última telemetria para a tabela de ativos. */
-  async listarComTelemetria(termo = '') {
+  async listarComTelemetria(termo = '', usuarioId = null) {
     const { rows } = await consultar(
       `SELECT a.*,
               t.atualizado_em,
@@ -22,9 +24,10 @@ export const ativoRepositorio = {
               END AS potencia_atual_kw
          FROM ativo a
          LEFT JOIN telemetria_atual t ON t.ativo_id = a.id
-        WHERE $1 = '' OR a.codigo ILIKE '%' || $1 || '%' OR a.nome ILIKE '%' || $1 || '%' OR a.tipo ILIKE '%' || $1 || '%'
+        WHERE ($3::int IS NULL OR a.usuario_id = $3)
+          AND ($1 = '' OR a.codigo ILIKE '%' || $1 || '%' OR a.nome ILIKE '%' || $1 || '%' OR a.tipo ILIKE '%' || $1 || '%')
         ORDER BY a.codigo`,
-      [termo.trim()],
+      [termo.trim(), usuarioId, usuarioId],
     )
     return rows.map((linha) => ({
       ativo: Ativo.deLinha(linha),
@@ -33,18 +36,21 @@ export const ativoRepositorio = {
     }))
   },
 
-  async buscarCodigo(codigo) {
-    const { rows } = await consultar('SELECT * FROM ativo WHERE LOWER(codigo) = LOWER($1) LIMIT 1', [codigo])
+  async buscarCodigo(codigo, usuarioId = null) {
+    const sql = usuarioId
+      ? 'SELECT * FROM ativo WHERE usuario_id = $2 AND LOWER(codigo) = LOWER($1) LIMIT 1'
+      : 'SELECT * FROM ativo WHERE LOWER(codigo) = LOWER($1) LIMIT 1'
+    const { rows } = await consultar(sql, usuarioId ? [codigo, usuarioId] : [codigo])
     return Ativo.deLinha(rows[0])
   },
 
-  async inserir(dados) {
+  async inserir(dados, usuarioId) {
     const { rows } = await consultar(
       `INSERT INTO ativo (
          codigo, nome, tipo, fabricante, status, horas_operacao,
          proxima_manutencao_h, instalado_em, temperatura_max_c,
-         tensao_nominal_v, tolerancia_tensao_pct, corrente_max_a, eficiencia_min_pct
-       ) VALUES ($1,$2,$3,$4,$5,0,$6,$7,$8,$9,$10,$11,$12)
+         tensao_nominal_v, tolerancia_tensao_pct, corrente_max_a, eficiencia_min_pct, usuario_id
+       ) VALUES ($1,$2,$3,$4,$5,0,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING *`,
       [
         dados.codigo,
@@ -59,19 +65,20 @@ export const ativoRepositorio = {
         dados.toleranciaTensaoPct,
         dados.correnteMaxA,
         dados.eficienciaMinPct,
+        usuarioId,
       ],
     )
     return Ativo.deLinha(rows[0])
   },
 
-  async atualizar(id, dados) {
+  async atualizar(id, dados, usuarioId) {
     const { rows } = await consultar(
       `UPDATE ativo SET
          codigo=$1, nome=$2, tipo=$3, fabricante=$4, status=$5,
          proxima_manutencao_h=$6, instalado_em=$7, temperatura_max_c=$8,
          tensao_nominal_v=$9, tolerancia_tensao_pct=$10,
          corrente_max_a=$11, eficiencia_min_pct=$12
-       WHERE id=$13
+       WHERE id=$13 AND usuario_id=$14
        RETURNING *`,
       [
         dados.codigo,
@@ -87,17 +94,20 @@ export const ativoRepositorio = {
         dados.correnteMaxA,
         dados.eficienciaMinPct,
         id,
+        usuarioId,
       ],
     )
     return Ativo.deLinha(rows[0])
   },
 
-  async buscarPorId(id) {
-    const { rows } = await consultar('SELECT * FROM ativo WHERE id = $1', [id])
+  async buscarPorId(id, usuarioId = null) {
+    const sql = usuarioId
+      ? 'SELECT * FROM ativo WHERE id = $1 AND usuario_id = $2'
+      : 'SELECT * FROM ativo WHERE id = $1'
+    const { rows } = await consultar(sql, usuarioId ? [id, usuarioId] : [id])
     return Ativo.deLinha(rows[0])
   },
 
-  /** Busca por código ou nome, sem diferenciar maiúsculas/minúsculas (RN10). */
   async buscar(termo, limite = 10) {
     const { rows } = await consultar(
       `SELECT * FROM ativo
@@ -113,16 +123,10 @@ export const ativoRepositorio = {
     await consultar('UPDATE ativo SET status = $1 WHERE id = $2 AND status <> $1', [status, id])
   },
 
-  /** Soma horas de operação (o simulador chama a cada leitura de 15 min). */
   async somarHorasOperacao(id, horas) {
     await consultar('UPDATE ativo SET horas_operacao = horas_operacao + $1 WHERE id = $2', [horas, id])
   },
 
-  /**
-   * Histórico diário de um ativo nos últimos N dias (RF31 / RN43).
-   * Para cada dia: potência média e máxima (kW) e energia (kWh).
-   * @param {'gerada'|'consumida'} grandeza
-   */
   async historicoDiario(id, inicio, fim, grandeza) {
     const potencia = grandeza === 'gerada' ? 'potencia_gerada_kw' : 'potencia_consumida_kw'
     const energia = grandeza === 'gerada' ? 'energia_gerada_kwh' : 'energia_consumida_kwh'

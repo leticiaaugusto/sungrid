@@ -1,10 +1,9 @@
-/**
- * Repositório dos parâmetros do sistema (tabelas `configuracao` e `tarifa`).
- * Essas tabelas não têm chave estrangeira com as demais (seção 6.1).
- */
+
 import { consultar } from '../../config/banco.js'
 import { Configuracao } from './Configuracao.js'
 import { Tarifa } from './Tarifa.js'
+
+// Esta constante disponibiliza parametrosRepositorio para outras partes do projeto.
 
 export const parametrosRepositorio = {
   async buscarConfiguracao() {
@@ -12,7 +11,6 @@ export const parametrosRepositorio = {
     return Configuracao.deLinha(rows[0])
   },
 
-  /** Tarifa vigente em uma data AAAA-MM-DD. */
   async buscarTarifaVigente(data) {
     const { rows } = await consultar(
       `SELECT * FROM tarifa

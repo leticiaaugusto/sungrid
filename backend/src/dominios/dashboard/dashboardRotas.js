@@ -1,16 +1,15 @@
-/**
- * Rotas do Dashboard Principal.
- * (O gráfico semanal usa GET /consumo/diario e a pegada de carbono usa
- * GET /sustentabilidade/carbono.)
- */
+
 import { Router } from 'express'
 import { autenticar } from '../../compartilhado/middlewares/autenticar.js'
+import { somenteAdministrador } from '../../compartilhado/middlewares/somenteAdministrador.js'
 import { DashboardService } from './DashboardService.js'
+
+// Esta constante disponibiliza dashboardRotas para outras partes do projeto.
 
 export const dashboardRotas = Router()
 dashboardRotas.use(autenticar)
+dashboardRotas.use(somenteAdministrador)
 
-// GET /api/v1/dashboard/resumo — consumo do dia e do mês, alertas ativos e economia
-dashboardRotas.get('/resumo', async (_req, res) => {
-  res.json(await DashboardService.resumo())
+dashboardRotas.get('/resumo', async (req, res) => {
+  res.json(await DashboardService.resumo(req.usuario.id))
 })

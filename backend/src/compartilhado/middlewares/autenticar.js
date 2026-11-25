@@ -1,13 +1,8 @@
-/**
- * Middleware de autenticação (RN08 / RNF11).
- *
- * Exige o cabeçalho `Authorization: Bearer <token>` com um JWT válido.
- * Quando o token é válido, guarda em `req.usuario` o id e o papel do
- * usuário logado para as próximas camadas usarem.
- */
+
 import jwt from 'jsonwebtoken'
 import { ambiente } from '../../config/ambiente.js'
 import { erros } from '../erros.js'
+// Esta função executa a ação solicitada.
 
 export function autenticar(req, _res, next) {
   const cabecalho = req.headers.authorization ?? ''

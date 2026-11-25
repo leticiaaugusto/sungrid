@@ -4,8 +4,8 @@ import Alerta from '../../compartilhado/componentes/Alerta.jsx'
 import { encerrarSessao, obterToken, salvarSessao } from '../../compartilhado/sessao/sessao.js'
 import { mensagemDeErro } from '../../compartilhado/utilitarios/formatacao.js'
 import { usuariosServico } from './usuariosServico.js'
+// Esta tela monta a página MinhaConta.
 
-/** Tela Minha Conta: perfil, senha, LGPD e pedido de perfil pendente. */
 function PaginaMinhaConta() {
   const navegar = useNavigate()
   const [usuario, setUsuario] = useState(null)
@@ -17,6 +17,8 @@ function PaginaMinhaConta() {
   const [confirmacaoSenha, setConfirmacaoSenha] = useState('')
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
+
+  // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
     let ativo = true
@@ -31,6 +33,7 @@ function PaginaMinhaConta() {
       .catch((falha) => ativo && setErro(mensagemDeErro(falha, 'Não foi possível carregar sua conta.')))
     return () => { ativo = false }
   }, [])
+// Esta função grava ou atualiza os dados.
 
   async function salvarPerfil(evento) {
     evento.preventDefault()
@@ -64,6 +67,7 @@ function PaginaMinhaConta() {
       setErro(mensagemDeErro(falha, 'Não foi possível alterar a senha.'))
     }
   }
+// Esta função remove os dados selecionados.
 
   async function excluirConta() {
     if (!window.confirm('Excluir permanentemente sua conta? Esta ação não pode ser desfeita.')) return

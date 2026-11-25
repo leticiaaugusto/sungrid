@@ -25,8 +25,8 @@ const FORMATOS_EXPORTACAO = [
 
 const ROTULOS_STATUS = { ATIVO: 'Ativo', RESOLVIDO: 'Resolvido' }
 const ROTULOS_PRIORIDADE = { ALTA: 'Alta', MEDIA: 'Média', BAIXA: 'Baixa' }
+// Esta tela monta a página Alertas.
 
-/** Tela Gerenciamento de Alertas (RF21–RF26). */
 function PaginaAlertas() {
   const [status, setStatus] = useState('todos')
   const [prioridade, setPrioridade] = useState('todas')
@@ -37,7 +37,8 @@ function PaginaAlertas() {
   const [atualizadoEm, setAtualizadoEm] = useState(null)
   const chaveFiltro = `${status}:${prioridade}`
 
-  // Busca de novo sempre que um filtro muda (RN31: os dois filtros juntos).
+  // Este efeito atualiza a tela quando necessário.
+
   useEffect(() => {
     let ativo = true
     const atualizar = () => {
@@ -66,7 +67,6 @@ function PaginaAlertas() {
   const alertas = carregando ? [] : resultado.alertas
   const erro = carregando ? '' : resultado.erro
 
-  // RF26: o relatório é gerado pela API, com os mesmos filtros da tela.
   async function exportar() {
     setExportando(true)
     setErroExportacao('')
@@ -146,7 +146,7 @@ function PaginaAlertas() {
               Carregando alertas...
             </p>
           ) : alertas.length === 0 ? (
-            // RN32: lista vazia, sem alterar nada no banco.
+
             <p className="alerts-feedback" role="status">
               Nenhum alerta encontrado para os filtros selecionados.
             </p>
@@ -167,7 +167,6 @@ function PaginaAlertas() {
                     {alertas.map((alerta) => (
                       <tr key={alerta.id}>
                         <td>
-                          {/* As classes de cor do protótipo usam os valores em minúsculas. */}
                           <span className={`alert-badge alert-badge--${alerta.status.toLowerCase()}`}>
                             {ROTULOS_STATUS[alerta.status] ?? alerta.status}
                           </span>

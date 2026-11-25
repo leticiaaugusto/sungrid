@@ -1,10 +1,10 @@
-/**
- * Repositório da auditoria: único ponto que lê/grava a tabela `auditoria`.
- */
+
 import { consultar } from '../../config/banco.js'
 
+// Esta constante disponibiliza auditoriaRepositorio para outras partes do projeto.
+
 export const auditoriaRepositorio = {
-  /** @param {import('./Auditoria.js').Auditoria} registro */
+
   async inserir(registro) {
     await consultar(
       `INSERT INTO auditoria (usuario_id, acao, entidade, entidade_id, ip, detalhes, data_hora)
@@ -21,7 +21,6 @@ export const auditoriaRepositorio = {
     )
   },
 
-  /** Ações feitas por um usuário (usado na exportação de dados pessoais — LGPD). */
   async listarPorUsuario(usuarioId) {
     const { rows } = await consultar(
       `SELECT acao, entidade, entidade_id, data_hora

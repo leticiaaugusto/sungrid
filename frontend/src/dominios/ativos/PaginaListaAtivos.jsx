@@ -31,8 +31,8 @@ const ativoInicial = {
     eficienciaMinPct: '',
   },
 }
+// Esta tela monta a página ListaAtivos.
 
-/** Lista de ativos com polling, filtro por tipo e cadastro exclusivo para administradores. */
 function PaginaListaAtivos() {
   const [parametros] = useSearchParams()
   const legado = parametros.get('ativo')
@@ -45,6 +45,8 @@ function PaginaListaAtivos() {
   const [formulario, setFormulario] = useState(ativoInicial)
   const usuario = obterUsuario()
   const administrador = usuario?.papel === 'ADMINISTRADOR'
+
+  // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
     let ativo = true
@@ -105,6 +107,7 @@ function PaginaListaAtivos() {
       faixaOperacao: { ...atual.faixaOperacao, [campo]: valor },
     }))
   }
+// Esta função grava ou atualiza os dados.
 
   async function salvar(evento) {
     evento.preventDefault()

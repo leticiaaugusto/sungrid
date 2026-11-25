@@ -52,6 +52,7 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de:
 2. `banco/02_seguranca_supabase.sql` — fecha a API pública automática do Supabase (só no Supabase)
 3. `banco/03_dados_iniciais.sql` — equipamentos da loja, metas/limites e tarifa
 4. Para bancos criados antes desta versão, rode também `banco/04_perfis_usuario.sql`.
+5. Em bancos criados antes da separação por usuário, rode também `banco/05_isolamento_usuario.sql`.
 
 ### 2. Backend (API)
 

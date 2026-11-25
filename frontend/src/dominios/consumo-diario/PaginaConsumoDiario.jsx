@@ -9,8 +9,8 @@ import {
 } from '../../compartilhado/utilitarios/formatacao.js'
 import GraficoConsumoDiario from './GraficoConsumoDiario.jsx'
 import { consumoDiarioServico } from './consumoDiarioServico.js'
+// Esta função organiza os dados antes de enviá-los ou exibí-los.
 
-/** Cards de indicadores do dia (RF15). */
 function montarIndicadores(dia) {
   const janela = dia.janelaMaiorGeracao
   return [
@@ -52,14 +52,15 @@ function montarIndicadores(dia) {
   ]
 }
 
-// Classes CSS do protótipo para os tons dos cards.
 const CLASSE_TOM = { positivo: 'positive', destaque: 'accent' }
+// Esta tela monta a página ConsumoDiario.
 
-/** Tela Análise de Consumo Diário (RF13, RF14, RF15). */
 function PaginaConsumoDiario() {
   const [dia, setDia] = useState(null)
   const [erro, setErro] = useState('')
   const [atualizadoEm, setAtualizadoEm] = useState(null)
+
+  // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
     let ativo = true

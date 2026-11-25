@@ -1,7 +1,6 @@
-/**
- * Chamadas à API da tela Gerenciamento de Alertas.
- */
+
 import { baixarArquivoApi, requisicaoApi } from '../../compartilhado/api/clienteApi.js'
+// Esta função organiza os dados antes de enviá-los ou exibí-los.
 
 function montarFiltros({ status = 'todos', prioridade = 'todas', formato } = {}) {
   const parametros = new URLSearchParams()
@@ -12,13 +11,14 @@ function montarFiltros({ status = 'todos', prioridade = 'todas', formato } = {})
   return texto ? `?${texto}` : ''
 }
 
+// Esta constante disponibiliza alertasServico para outras partes do projeto.
+
 export const alertasServico = {
-  /** GET /alertas?status=&prioridade= — filtros combinados (RN31). */
+
   listar(filtros) {
     return requisicaoApi(`/alertas${montarFiltros(filtros)}`)
   },
 
-  /** GET /alertas/exportar — baixa o relatório em csv, xlsx ou pdf (RF26). */
   exportar(filtros) {
     return baixarArquivoApi(`/alertas/exportar${montarFiltros(filtros)}`, `relatorio-alertas.${filtros.formato}`)
   },

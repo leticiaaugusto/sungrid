@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Campo, ErroCampo, RotuloCampo } from './GrupoCampos.jsx'
 
-/** Ícone de olho para mostrar/ocultar a senha. */
 function IconeOlho({ visivel }) {
   return (
     <svg
@@ -30,11 +29,6 @@ function IconeOlho({ visivel }) {
   )
 }
 
-/**
- * Campo de formulário com rótulo, marcação de obrigatório, mensagem de
- * erro e botão de mostrar senha (quando tipo="password").
- * O `id` também é o `name` do input (usado no FormData).
- */
 function CampoFormulario({
   id,
   rotulo,

@@ -1,7 +1,4 @@
-/**
- * Caixa de mensagem (sucesso ou erro) exibida nas telas.
- * variante: 'padrao' (✓) ou 'erro' (!).
- */
+
 function Alerta({ variante = 'padrao', children }) {
   const ehErro = variante === 'erro'
 

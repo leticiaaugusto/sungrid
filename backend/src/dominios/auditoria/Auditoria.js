@@ -1,11 +1,6 @@
-/**
- * Entidade Auditoria (tabela `auditoria`).
- *
- * Registro de ações sensíveis: quem fez, o quê, sobre qual alvo, de qual
- * IP e quando (RN39, RN46, RNF13). O alvo é guardado pelo nome da
- * entidade + id, o que permite auditar ativos, alertas e chamados na
- * mesma tabela (seção 6.1 do relatório).
- */
+
+// Esta constante disponibiliza ACOES_AUDITADAS para outras partes do projeto.
+
 export const ACOES_AUDITADAS = Object.freeze({
   LOGIN: 'LOGIN',
   LOGIN_FALHOU: 'LOGIN_FALHOU',
@@ -37,10 +32,6 @@ export class Auditoria {
     this.dataHora = dataHora
   }
 
-  /**
-   * Monta um novo registro de auditoria (método `registrar` do diagrama de classes).
-   * @param {{ usuarioId?: number, acao: string, alvo?: { entidade: string, id: number }, ip?: string, detalhes?: object }} dados
-   */
   static registrar({ usuarioId = null, acao, alvo, ip = null, detalhes = null }) {
     return new Auditoria({
       usuarioId,

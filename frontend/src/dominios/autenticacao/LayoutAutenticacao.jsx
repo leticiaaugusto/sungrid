@@ -18,11 +18,8 @@ function IconeSetaVoltar() {
     </svg>
   )
 }
+// Este componente organiza o layout Autenticacao.
 
-/**
- * Moldura das telas de autenticação (login, cadastro, recuperar e
- * redefinir senha): cartão central com logo, título e rodapé.
- */
 function LayoutAutenticacao({ titulo, subtitulo, children, rodape, className = '', linkVoltar }) {
   const reduzirMovimento = useReducedMotion()
 

@@ -1,6 +1,4 @@
-/**
- * Blocos de montagem dos formulários: grupo, campo, rótulo e erro.
- */
+
 function GrupoCampos({ children, className = '' }) {
   return (
     <div className={`field-group ${className}`.trim()} data-slot="field-group">

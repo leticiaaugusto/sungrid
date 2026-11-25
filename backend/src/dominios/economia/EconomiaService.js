@@ -1,21 +1,14 @@
-/**
- * EconomiaService: economia por autogeração (RN27) e CO₂ evitado (RN20).
- *
- * ATENÇÃO: as duas fórmulas são as PROPOSTAS da seção 4 do relatório e
- * ainda dependem de aprovação da equipe (DP06 e DP07). Se a fórmula
- * mudar, só este arquivo precisa ser alterado.
- */
+
 import { erros } from '../../compartilhado/erros.js'
 import { arredondar, diasNoMes, hoje, mesAtual, somarDias, validarMes } from '../../compartilhado/tempo.js'
 import { consumoRepositorio } from '../consumo/consumoRepositorio.js'
 import { parametrosRepositorio } from '../parametros/parametrosRepositorio.js'
 
+// Esta constante disponibiliza EconomiaService para outras partes do projeto.
+
 export const EconomiaService = {
-  /**
-   * Economia estimada no mês (RF19).
-   * Fórmula proposta: energia gerada no período x valor do kWh da tarifa vigente.
-   */
-  async estimativaDoMes(mes) {
+
+  async estimativaDoMes(mes, usuarioId) {
     mes = validarMes(mes ?? mesAtual())
     const inicio = `${mes}-01`
     const fimDoMes = `${mes}-${String(diasNoMes(mes)).padStart(2, '0')}`
@@ -23,7 +16,7 @@ export const EconomiaService = {
     if (inicio > hoje()) throw erros.requisicaoInvalida('O mês informado ainda não começou.', 'mes')
 
     const [totais, tarifa] = await Promise.all([
-      consumoRepositorio.totaisDoPeriodo(inicio, fim),
+      consumoRepositorio.totaisDoPeriodo(inicio, fim, usuarioId),
       parametrosRepositorio.buscarTarifaVigente(fim),
     ])
 
@@ -36,11 +29,7 @@ export const EconomiaService = {
     }
   },
 
-  /**
-   * CO₂ evitado (RF12). Hoje só existe o período "semana" (últimos 7 dias).
-   * Fórmula proposta: energia gerada x fator médio de emissão do SIN.
-   */
-  async carbonoEvitado({ periodo = 'semana' } = {}) {
+  async carbonoEvitado({ periodo = 'semana' } = {}, usuarioId) {
     if (periodo !== 'semana') {
       throw erros.requisicaoInvalida('Período não suportado. Use periodo=semana.', 'periodo')
     }
@@ -48,7 +37,7 @@ export const EconomiaService = {
     const inicio = somarDias(fim, -6)
 
     const [totais, configuracao] = await Promise.all([
-      consumoRepositorio.totaisDoPeriodo(inicio, fim),
+      consumoRepositorio.totaisDoPeriodo(inicio, fim, usuarioId),
       parametrosRepositorio.buscarConfiguracao(),
     ])
 

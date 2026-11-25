@@ -1,12 +1,8 @@
-/**
- * Middleware de autorização por papel (RBAC — RN09 / RNF11).
- *
- * Uso: `router.post('/rota', autorizar(ACOES.REINICIAR_ATIVO), ...)`.
- * Deve vir depois de `autenticar`, que preenche `req.usuario`.
- */
+
 import { PERMISSOES_POR_PAPEL } from '../../dominios/autenticacao/permissoes.js'
 import { usuarioRepositorio } from '../../dominios/autenticacao/usuarioRepositorio.js'
 import { erros } from '../erros.js'
+// Esta função executa a ação solicitada.
 
 export function autorizar(acao) {
   return async (req, _res, next) => {

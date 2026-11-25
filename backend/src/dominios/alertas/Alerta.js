@@ -1,11 +1,8 @@
-/**
- * Entidade Alerta (tabela `alerta`) — RN29, RN30, RN37, RN38.
- *
- * Prioridades: ALTA, MEDIA, BAIXA. Status: ATIVO, RESOLVIDO.
- * Um alerta pode não ter ativo (alerta da instalação inteira, como
- * consumo acima do limite operacional).
- */
+
+// Esta constante disponibiliza PRIORIDADES para outras partes do projeto.
+
 export const PRIORIDADES = Object.freeze({ ALTA: 'ALTA', MEDIA: 'MEDIA', BAIXA: 'BAIXA' })
+// Esta constante disponibiliza STATUS_ALERTA para outras partes do projeto.
 export const STATUS_ALERTA = Object.freeze({ ATIVO: 'ATIVO', RESOLVIDO: 'RESOLVIDO' })
 
 export class Alerta {
@@ -19,7 +16,7 @@ export class Alerta {
     this.criadoEm = criadoEm
     this.resolvidoEm = resolvidoEm
     this.resolvidoPor = resolvidoPor
-    // Dados resumidos do ativo de origem (preenchidos pelo repositório).
+
     this.ativo = ativo ?? null
   }
 
@@ -39,10 +36,6 @@ export class Alerta {
     })
   }
 
-  /**
-   * Resolve o alerta (RN38). `usuarioId` nulo = resolução automática,
-   * identificada como ação do sistema.
-   */
   resolver(usuarioId = null, agora = new Date()) {
     if (this.status === STATUS_ALERTA.RESOLVIDO) {
       throw new Error('Este alerta já está resolvido.')
@@ -52,10 +45,6 @@ export class Alerta {
     this.resolvidoPor = usuarioId
   }
 
-  /**
-   * Entra na contagem de "críticos" do Dashboard?
-   * DECISÃO (DP14 / RN18): crítico = alerta ATIVO com prioridade ALTA.
-   */
   ehCritico() {
     return this.status === STATUS_ALERTA.ATIVO && this.prioridade === PRIORIDADES.ALTA
   }
@@ -70,7 +59,7 @@ export class Alerta {
       critico: this.ehCritico(),
       criadoEm: this.criadoEm,
       resolvidoEm: this.resolvidoEm,
-      // RN38: resolução sem usuário = feita pelo sistema.
+
       resolvidoPor: this.status === STATUS_ALERTA.RESOLVIDO ? (this.resolvidoPor ? 'USUARIO' : 'SISTEMA') : null,
       ativo: this.ativo,
     }

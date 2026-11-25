@@ -1,8 +1,4 @@
-/**
- * Ícones SVG usados no painel. Uso: <Icone nome="sol" tamanho={18} />
- * Nomes disponíveis: painel, calendario, alerta, atividade, busca, sol,
- * bateria, moeda, setaCima, setaBaixo, fechar, folha.
- */
+
 function Icone({ nome, tamanho = 20 }) {
   const propriedadesSvg = {
     width: tamanho,

@@ -19,11 +19,8 @@ ChartJS.register(
   Tooltip,
   Legend,
 )
+// Este componente monta o gráfico ConsumoSemanal.
 
-/**
- * Gráfico do Dashboard: consumo real dos últimos 7 dias x meta diária (RF11).
- * @param {{ dados: { rotulos: string[], consumoKwh: (number|null)[], metaKwh: (number|null)[] } }} props
- */
 function GraficoConsumoSemanal({ dados }) {
   const dadosGrafico = {
     labels: dados.rotulos,
@@ -113,7 +110,7 @@ function GraficoConsumoSemanal({ dados }) {
       },
       y: {
         beginAtZero: true,
-        // folga no topo para os rótulos de valor não serem cortados
+
         grace: '12%',
         border: {
           display: false,

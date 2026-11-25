@@ -8,13 +8,8 @@ import {
 import { Bar } from 'react-chartjs-2'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
+// Este componente monta o gráfico ConsumoMensal.
 
-/**
- * Gráfico da tela Consumo Mensal: energia consumida em cada dia do mês (RF16).
- * Dias sem leitura ficam sem barra (null), não como consumo zero (RN24).
- *
- * @param {{ dados: { dias: string[], consumoKwh: (number|null)[], periodo: string } }} props
- */
 function GraficoConsumoMensal({ dados }) {
   const dadosGrafico = {
     labels: dados.dias,

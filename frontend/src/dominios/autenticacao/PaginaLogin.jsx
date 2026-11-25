@@ -8,8 +8,8 @@ import { mensagemDeErro } from '../../compartilhado/utilitarios/formatacao.js'
 import { obterErrosDoFormulario } from '../../compartilhado/utilitarios/validacaoFormulario.js'
 import LayoutAutenticacao from './LayoutAutenticacao.jsx'
 import { autenticacaoServico } from './autenticacaoServico.js'
+// Esta tela monta a página Login.
 
-/** Tela de Login (RF01): e-mail e senha. Após entrar, abre o Dashboard. */
 function PaginaLogin() {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
@@ -18,6 +18,7 @@ function PaginaLogin() {
   const localizacao = useLocation()
   const [parametros] = useSearchParams()
   const sessaoExpirada = parametros.get('sessao') === 'expirada'
+// Esta função envia ou recebe dados da API.
 
   async function enviar(evento) {
     evento.preventDefault()
@@ -37,7 +38,7 @@ function PaginaLogin() {
     try {
       const sessao = await autenticacaoServico.entrar({ email: dados.get('email'), senha: dados.get('senha') })
       salvarSessao(sessao)
-      // Volta para a tela que o usuário tentou abrir antes do login (se houver).
+
       navegar(localizacao.state?.voltarPara ?? '/dashboard', { replace: true })
     } catch (falha) {
       setErro(mensagemDeErro(falha, 'Não foi possível entrar. Tente novamente.'))

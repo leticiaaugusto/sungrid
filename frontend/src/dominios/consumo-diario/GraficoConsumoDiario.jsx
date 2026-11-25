@@ -19,14 +19,8 @@ ChartJS.register(
   Tooltip,
   Legend,
 )
+// Este componente monta o gráfico ConsumoDiario.
 
-/**
- * Gráfico da tela Consumo Diário: geração x consumo hora a hora (RF13 / RF14).
- * Os valores são a potência média de cada hora (kW), que equivale à energia
- * da hora em kWh. Horas sem leitura ficam vazias (null), não zero (RN21).
- *
- * @param {{ dados: { rotulos: string[], geracaoKw: (number|null)[], consumoKw: (number|null)[], picoSolar: string } }} props
- */
 function GraficoConsumoDiario({ dados }) {
   const dadosGrafico = {
     labels: dados.rotulos,
@@ -119,7 +113,7 @@ function GraficoConsumoDiario({ dados }) {
       },
       y: {
         beginAtZero: true,
-        // folga no topo para os rótulos de valor não serem cortados
+
         grace: '12%',
         border: {
           display: false,

@@ -1,12 +1,4 @@
-/**
- * Entidade Configuracao (tabela `configuracao`, linha única).
- *
- * Guarda as metas e limites usados nos cálculos (RN19, RN20, RN25):
- *  - metaConsumoDiarioKwh: linha de meta do gráfico semanal
- *  - limiteContratualMesKwh: comparado com a projeção mensal
- *  - limiteOperacionalKw: potência consumida que dispara alerta
- *  - fatorEmissaoKgco2Kwh: converte energia gerada em CO₂ evitado
- */
+
 export class Configuracao {
   constructor({ metaConsumoDiarioKwh, limiteContratualMesKwh, limiteOperacionalKw, fatorEmissaoKgco2Kwh }) {
     this.metaConsumoDiarioKwh = metaConsumoDiarioKwh
@@ -24,7 +16,6 @@ export class Configuracao {
     })
   }
 
-  /** RN20: energia gerada (kWh) x fator de emissão = kg de CO₂ evitados. */
   calcularCo2Evitado(kwhGerados) {
     return kwhGerados * (this.fatorEmissaoKgco2Kwh ?? 0)
   }

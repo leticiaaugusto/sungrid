@@ -1,5 +1,7 @@
 import { baixarArquivoApi, requisicaoApi } from '../../compartilhado/api/clienteApi.js'
 
+// Esta constante disponibiliza usuariosServico para outras partes do projeto.
+
 export const usuariosServico = {
   usuarioAtual() {
     return requisicaoApi('/auth/me')

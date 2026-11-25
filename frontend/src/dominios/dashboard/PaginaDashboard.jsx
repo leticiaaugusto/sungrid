@@ -10,11 +10,8 @@ import {
 } from '../../compartilhado/utilitarios/formatacao.js'
 import GraficoConsumoSemanal from './GraficoConsumoSemanal.jsx'
 import { dashboardServico } from './dashboardServico.js'
+// Esta função organiza os dados antes de enviá-los ou exibí-los.
 
-/**
- * Monta os 4 cards a partir do resumo da API.
- * Consumo menor que o período anterior = bom (verde); maior = vermelho.
- */
 function montarIndicadores(resumo) {
   const { consumoDia, consumoMes, alertas, economia } = resumo
   const tendenciaConsumo = (variacao) =>
@@ -66,13 +63,15 @@ function montarIndicadores(resumo) {
     },
   ]
 }
+// Esta tela monta a página Dashboard.
 
-/** Tela Dashboard Principal (RF10, RF11). */
 function PaginaDashboard() {
   const [resumo, setResumo] = useState(null)
   const [semana, setSemana] = useState(null)
   const [erro, setErro] = useState('')
   const [atualizadoEm, setAtualizadoEm] = useState(null)
+
+  // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
     let ativo = true
@@ -107,7 +106,6 @@ function PaginaDashboard() {
 
   return (
     <>
-      {/* RN12: dados simulados não podem parecer medições reais. */}
       <p className="demo-data-note">
         Dados simulados (loja de demonstração)
         {atualizadoEm && ` · Atualizado às ${atualizadoEm.toLocaleTimeString('pt-BR')}`}

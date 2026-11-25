@@ -7,11 +7,8 @@ import { mensagemDeErro } from '../../compartilhado/utilitarios/formatacao.js'
 import { obterErrosDoFormulario } from '../../compartilhado/utilitarios/validacaoFormulario.js'
 import LayoutAutenticacao from './LayoutAutenticacao.jsx'
 import { autenticacaoServico } from './autenticacaoServico.js'
+// Esta tela monta a página RedefinirSenha.
 
-/**
- * Tela aberta pelo link do e-mail de recuperação (/redefinir-senha?token=...).
- * O token é de uso único e tem validade limitada (RN05).
- */
 function PaginaRedefinirSenha() {
   const [parametros] = useSearchParams()
   const token = parametros.get('token')
@@ -19,6 +16,7 @@ function PaginaRedefinirSenha() {
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [errosCampos, setErrosCampos] = useState({})
+// Esta função envia ou recebe dados da API.
 
   async function enviar(evento) {
     evento.preventDefault()

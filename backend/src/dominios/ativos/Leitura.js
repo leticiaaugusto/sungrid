@@ -1,14 +1,4 @@
-/**
- * Entidade Leitura (tabela `leitura`).
- *
- * Registro histórico de um ativo a cada 15 minutos. Não tem métodos
- * (diagrama de classes): apenas guarda a medição.
- *
- * RN15 — unidades:
- *  - potencia_*_kw  = potência INSTANTÂNEA no momento da leitura (kW);
- *  - energia_*_kwh  = energia ACUMULADA nos 15 min do intervalo (kWh).
- * Os totais diários e mensais somam os campos de ENERGIA, nunca os de potência.
- */
+
 export class Leitura {
   constructor({
     ativoId,

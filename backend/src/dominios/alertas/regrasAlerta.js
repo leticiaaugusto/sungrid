@@ -1,15 +1,11 @@
-/**
- * Catálogo das categorias de alerta automático (RN33, RN34, RN37).
- *
- * Para cada tipo: prioridade e se pode ser resolvido automaticamente
- * quando a condição volta ao normal. Os valores marcados como DECISÃO
- * ainda precisam ser validados pela equipe (DP08 e DP09) — basta
- * alterar aqui.
- */
+
 import { PRIORIDADES } from './Alerta.js'
 
-/** DECISÃO (DP08): carga de bateria abaixo disso gera alerta. */
+// Esta constante disponibiliza LIMITE_BATERIA_BAIXA_PCT para outras partes do projeto.
+
 export const LIMITE_BATERIA_BAIXA_PCT = 20
+
+// Esta constante reúne as opções usadas pela tela.
 
 export const TIPOS_ALERTA = Object.freeze({
   CONSUMO_ACIMA_LIMITE: {
@@ -22,7 +18,7 @@ export const TIPOS_ALERTA = Object.freeze({
     prioridade: PRIORIDADES.ALTA,
     resolucaoAutomatica: true,
   },
-  // DECISÃO (DP09): pico de tensão exige conferência do operador.
+
   PICO_TENSAO: {
     descricao: 'Tensão fora da tolerância',
     prioridade: PRIORIDADES.ALTA,
@@ -45,16 +41,8 @@ export const TIPOS_ALERTA = Object.freeze({
   },
 })
 
-/** Formata número no padrão brasileiro com 1 casa (ex.: 78,4). */
 const numero = (valor) => valor.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 
-/**
- * Verifica as condições de alerta de UMA telemetria.
- * Devolve um mapa { TIPO: descrição } apenas com as condições violadas.
- *
- * @param {import('../ativos/Ativo.js').Ativo} ativo
- * @param {import('../ativos/TelemetriaAtual.js').TelemetriaAtual} telemetria
- */
 export function condicoesVioladas(ativo, telemetria) {
   const { faixa } = ativo
   const violadas = {}
@@ -80,7 +68,6 @@ export function condicoesVioladas(ativo, telemetria) {
   return violadas
 }
 
-/** Tipo de alerta usado quando o ativo para de enviar telemetria. */
 export function tipoAlertaOffline(ativo) {
   return ativo.tipo === 'SENSOR' ? 'SENSOR_OFFLINE' : 'FALHA_COMUNICACAO'
 }

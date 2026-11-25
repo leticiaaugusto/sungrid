@@ -1,18 +1,8 @@
 import Icone from './Icone.jsx'
 
-// Os nomes das classes CSS vieram do protótipo (em inglês); aqui
-// traduzimos os valores em português para essas classes.
 const CLASSE_TOM = { verde: 'green', vermelho: 'red', amarelo: 'yellow' }
 const CLASSE_DIRECAO = { positiva: 'positive', negativa: 'negative', atencao: 'warning' }
 
-/**
- * Card de indicador usado no Dashboard e no Consumo Mensal.
- *
- * @param {{ indicador: {
- *   rotulo: string, valor: string, tendencia: string,
- *   direcao: 'positiva'|'negativa'|'atencao', icone: string, tom: 'verde'|'vermelho'|'amarelo'
- * } }} props
- */
 function CartaoIndicador({ indicador }) {
   const { rotulo, valor, tendencia, direcao, icone, tom } = indicador
 

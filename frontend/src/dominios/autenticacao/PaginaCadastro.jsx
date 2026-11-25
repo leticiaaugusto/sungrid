@@ -7,13 +7,14 @@ import { mensagemDeErro } from '../../compartilhado/utilitarios/formatacao.js'
 import { obterErrosDoFormulario } from '../../compartilhado/utilitarios/validacaoFormulario.js'
 import LayoutAutenticacao from './LayoutAutenticacao.jsx'
 import { autenticacaoServico } from './autenticacaoServico.js'
+// Esta tela monta a página Cadastro.
 
-/** Tela de Cadastro (RF02 / RF03 — RN02 e RN03). */
 function PaginaCadastro() {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [errosCampos, setErrosCampos] = useState({})
+// Esta função envia ou recebe dados da API.
 
   async function enviar(evento) {
     evento.preventDefault()
@@ -50,7 +51,7 @@ function PaginaCadastro() {
       setMensagem(resposta.mensagem)
       formulario.reset()
     } catch (falha) {
-      // Se a API indicar o campo (ex.: e-mail já cadastrado), o erro aparece nele.
+
       if (falha.campo) setErrosCampos({ [falha.campo]: falha.message })
       else setErro(mensagemDeErro(falha, 'Não foi possível criar sua conta. Tente novamente.'))
     } finally {

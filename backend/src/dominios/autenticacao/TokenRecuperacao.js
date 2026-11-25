@@ -1,10 +1,4 @@
-/**
- * Entidade TokenRecuperacao (tabela `token_recuperacao`) — RN05 / RNF12.
- *
- * O token original (texto aleatório) vai SOMENTE no link enviado por
- * e-mail. O banco guarda apenas o hash SHA-256 dele: se alguém ler a
- * tabela, não consegue usar os links.
- */
+
 import crypto from 'node:crypto'
 
 export class TokenRecuperacao {
@@ -27,15 +21,10 @@ export class TokenRecuperacao {
     })
   }
 
-  /** Calcula o hash SHA-256 de um token em texto. */
   static calcularHash(token) {
     return crypto.createHash('sha256').update(token).digest('hex')
   }
 
-  /**
-   * Cria um token novo para o usuário.
-   * Devolve o token em texto (para o link) e a entidade (para o banco).
-   */
   static gerar(usuarioId, validadeMinutos) {
     const token = crypto.randomBytes(32).toString('hex')
     const entidade = new TokenRecuperacao({
@@ -47,12 +36,10 @@ export class TokenRecuperacao {
     return { token, entidade }
   }
 
-  /** Válido = ainda não expirou e nunca foi usado. */
   estaValido(agora = new Date()) {
     return !this.usadoEm && new Date(this.expiraEm) > agora
   }
 
-  /** Impede que o mesmo link redefina a senha duas vezes. */
   marcarComoUsado(agora = new Date()) {
     this.usadoEm = agora
   }

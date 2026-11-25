@@ -11,13 +11,13 @@ import {
 import GraficoConsumoMensal from './GraficoConsumoMensal.jsx'
 import { consumoMensalServico } from './consumoMensalServico.js'
 
-/** Consumo menor que a referência = bom (verde). */
 const avaliarConsumo = (variacao) =>
   variacao === null
     ? { direcao: 'atencao', tom: 'amarelo' }
     : variacao <= 0
       ? { direcao: 'positiva', tom: 'verde' }
       : { direcao: 'negativa', tom: 'vermelho' }
+// Esta função organiza os dados antes de enviá-los ou exibí-los.
 
 function montarIndicadores(mes) {
   const { comparacao } = mes
@@ -68,7 +68,6 @@ function montarIndicadores(mes) {
   ]
 }
 
-/** Barra de comparação: proporcional ao maior dos dois valores. */
 function BarraComparacao({ rotulo, valorKwh, maximo, classe }) {
   const percentual = maximo ? Math.round((valorKwh / maximo) * 90) : 0
   return (
@@ -90,13 +89,15 @@ function BarraComparacao({ rotulo, valorKwh, maximo, classe }) {
     </div>
   )
 }
+// Esta tela monta a página ConsumoMensal.
 
-/** Tela Análise de Consumo Mensal (RF16–RF20). */
 function PaginaConsumoMensal() {
   const [mes, setMes] = useState(null)
   const [economia, setEconomia] = useState(null)
   const [erro, setErro] = useState('')
   const [atualizadoEm, setAtualizadoEm] = useState(null)
+
+  // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
     let ativo = true
@@ -157,7 +158,6 @@ function PaginaConsumoMensal() {
           <h2 id="titulo-comparacao-mensal">
             {nomeAtual} vs {nomeAnterior} (Consumo Comparativo)
           </h2>
-          {/* RN28: insights gerados pela API a partir dos dados. */}
           <p>{mes.insights.comparacao}</p>
           <BarraComparacao
             rotulo={`${nomeAtual} (Mês Atual)`}

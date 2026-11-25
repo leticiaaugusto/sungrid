@@ -6,7 +6,6 @@ import { diaDaSemana, formatarKw, formatarNumero, mensagemDeErro } from '../../c
 import GraficoHistoricoAtivo from './GraficoHistoricoAtivo.jsx'
 import { ativosServico } from './ativosServico.js'
 
-/** A telemetria é consultada a cada 5 segundos (RNF07). */
 const ATUALIZAR_TELEMETRIA_MS = 5_000
 
 const ROTULOS_STATUS = {
@@ -16,13 +15,9 @@ const ROTULOS_STATUS = {
   MANUTENCAO: 'Em manutenção',
 }
 
-/** Situação 'normal'/'atencao' da API -> tom visual do card. */
 const tomDaSituacao = (situacao) => (situacao === 'atencao' ? 'warning' : 'positive')
+// Esta função organiza os dados antes de enviá-los ou exibí-los.
 
-/**
- * Monta os cards de métricas a partir do cadastro + telemetria.
- * Cards sem valor (ex.: eficiência de um medidor) não aparecem.
- */
 function montarMetricas(ativo, telemetria) {
   const { valores, avaliacao } = telemetria
   const gerador = telemetria.grandezaPrincipal === 'gerada'
@@ -112,7 +107,6 @@ function montarMetricas(ativo, telemetria) {
     })
   }
 
-  // RN44: horas até a manutenção; prazo vencido é sinalizado.
   const restante = ativo.horasAteManutencao
   metricas.push({
     id: 'horas-operacao',
@@ -130,13 +124,12 @@ function montarMetricas(ativo, telemetria) {
 
   return metricas
 }
+// Esta tela monta a página AcompanhamentoAtivo.
 
-/** Tela Acompanhamento de Ativo (RF28–RF33). */
 function PaginaAcompanhamentoAtivo() {
   const { id: idAtivo } = useParams()
   const [tentativa, setTentativa] = useState(0)
-  // Cada resultado guarda a "chave" (ativo + tentativa) a que pertence. Assim,
-  // ao trocar de ativo, os dados antigos deixam de valer sem precisar limpar o estado.
+
   const chave = `${idAtivo}:${tentativa}`
   const [cadastro, setCadastro] = useState({ chave: '', ativo: null, historico: null, erro: '' })
   const [telemetria, setTelemetria] = useState({ idAtivo: null, dados: null })
@@ -149,7 +142,8 @@ function PaginaAcompanhamentoAtivo() {
     [idAtivo],
   )
 
-  // Cadastro e histórico: ao trocar de ativo (ou ao clicar em "Tentar novamente").
+  // Este efeito atualiza a tela quando necessário.
+
   useEffect(() => {
     if (!idAtivo) return undefined
     let naTela = true
@@ -165,7 +159,8 @@ function PaginaAcompanhamentoAtivo() {
     }
   }, [chave, idAtivo, buscarCadastroEHistorico])
 
-  // Telemetria: a cada 10 segundos (RF29).
+  // Este efeito atualiza a tela quando necessário.
+
   useEffect(() => {
     if (!idAtivo) return undefined
     let naTela = true
@@ -199,7 +194,7 @@ function PaginaAcompanhamentoAtivo() {
     try {
       const resposta = acao === 'reiniciar' ? await ativosServico.reiniciar(ativo.id) : await ativosServico.abrirChamado(ativo.id)
       setRetornoAcao({ idAtivo, mensagem: resposta.mensagem, erro: '' })
-      // Atualiza status e horas do ativo depois da ação.
+
       const [novoAtivo, novoHistorico] = await buscarCadastroEHistorico()
       setCadastro({ chave, ativo: novoAtivo, historico: novoHistorico, erro: '' })
     } catch (falha) {
@@ -210,7 +205,7 @@ function PaginaAcompanhamentoAtivo() {
   }
 
   function confirmarReinicio() {
-    // RN46: confirmação antes do reinício.
+
     if (window.confirm(`Confirma o reinício do ativo ${ativo.codigo}?`)) executarAcao('reiniciar')
   }
 
@@ -247,7 +242,6 @@ function PaginaAcompanhamentoAtivo() {
         <div className="asset-summary__identity">
           <div className="asset-summary__title">
             <h2>{ativo.nome}</h2>
-            {/* As classes de cor do protótipo usam o status em minúsculas. */}
             <span className={`asset-status asset-status--${ativo.status.toLowerCase()}`}>
               {ROTULOS_STATUS[ativo.status] ?? ativo.status}
             </span>

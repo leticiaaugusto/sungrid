@@ -1,8 +1,8 @@
-/**
- * Repositório da telemetria atual (tabela `telemetria_atual`).
- */
+
 import { consultar } from '../../config/banco.js'
 import { TelemetriaAtual } from './TelemetriaAtual.js'
+
+// Esta constante disponibiliza telemetriaRepositorio para outras partes do projeto.
 
 export const telemetriaRepositorio = {
   async buscarPorAtivo(ativoId) {
@@ -15,11 +15,6 @@ export const telemetriaRepositorio = {
     return rows.map(TelemetriaAtual.deLinha)
   },
 
-  /**
-   * Grava (ou sobrescreve) a telemetria de um ativo.
-   * "INSERT ... ON CONFLICT DO UPDATE" garante no máximo uma linha por ativo.
-   * @param {TelemetriaAtual} telemetria
-   */
   async salvar(telemetria) {
     await consultar(
       `INSERT INTO telemetria_atual

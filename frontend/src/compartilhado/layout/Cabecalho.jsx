@@ -12,13 +12,8 @@ const ROTULOS_STATUS_ATIVO = {
   MANUTENCAO: 'Em manutenção',
 }
 
-/** Espera o usuário parar de digitar antes de pesquisar. */
 const ATRASO_BUSCA_MS = 250
 
-/**
- * Cabeçalho das telas internas: título, busca global de ativos (RF09),
- * usuário logado (RF07) e botão Sair (RF06).
- */
 function Cabecalho({ titulo, usuario }) {
   const [termo, setTermo] = useState('')
   const [ativos, setAtivos] = useState([])
@@ -26,6 +21,8 @@ function Cabecalho({ titulo, usuario }) {
   const [pesquisando, setPesquisando] = useState(false)
   const navegar = useNavigate()
   const termoLimpo = termo.trim()
+
+  // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
     if (!termoLimpo) return undefined

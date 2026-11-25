@@ -9,7 +9,6 @@ import MenuLateral from './MenuLateral.jsx'
 import { layoutServico } from './layoutServico.js'
 import './painel.css'
 
-/** Intervalo de atualização do card de alertas do menu. */
 const ATUALIZAR_ALERTAS_MS = 30_000
 
 const TITULOS_POR_ROTA = {
@@ -21,12 +20,8 @@ const TITULOS_POR_ROTA = {
   '/configuracoes': 'Minha Conta',
   '/usuarios': 'Usuários',
 }
+// Este componente organiza o layout Painel.
 
-/**
- * Moldura de todas as telas internas: menu lateral + cabeçalho + conteúdo.
- * Carrega o que é comum a todas as telas: usuário logado, alertas ativos
- * e pegada de carbono. Cada tela (Outlet) busca os próprios dados.
- */
 function LayoutPainel() {
   const [usuario, setUsuario] = useState(obterUsuario)
   const [alertasAtivos, setAlertasAtivos] = useState(null)
@@ -35,8 +30,10 @@ function LayoutPainel() {
   const localizacao = useLocation()
   const reduzirMovimento = useReducedMotion()
 
-  // Usuário logado e pegada de carbono: uma vez ao abrir.
+  // Este efeito atualiza a tela quando necessário.
+
   useEffect(() => {
+    if (obterUsuario()?.papel === 'OPERADOR') return
     let ativo = true
     layoutServico.usuarioLogado().then((dados) => ativo && setUsuario(dados)).catch(() => {})
     layoutServico
@@ -48,8 +45,10 @@ function LayoutPainel() {
     }
   }, [])
 
-  // Alertas ativos: atualiza a cada 30 s.
+  // Este efeito atualiza a tela quando necessário.
+
   useEffect(() => {
+    if (obterUsuario()?.papel === 'OPERADOR') return
     let ativo = true
     const atualizar = () =>
       layoutServico

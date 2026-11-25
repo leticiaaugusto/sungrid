@@ -6,16 +6,14 @@ import { mensagemDeErro } from '../../compartilhado/utilitarios/formatacao.js'
 import { obterErrosDoFormulario } from '../../compartilhado/utilitarios/validacaoFormulario.js'
 import LayoutAutenticacao from './LayoutAutenticacao.jsx'
 import { autenticacaoServico } from './autenticacaoServico.js'
+// Esta tela monta a página RecuperarSenha.
 
-/**
- * Tela "Esqueci minha senha" (RF04 / RF05).
- * A confirmação é a mesma exista ou não a conta (RN06).
- */
 function PaginaRecuperarSenha() {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [errosCampos, setErrosCampos] = useState({})
+// Esta função envia ou recebe dados da API.
 
   async function enviar(evento) {
     evento.preventDefault()

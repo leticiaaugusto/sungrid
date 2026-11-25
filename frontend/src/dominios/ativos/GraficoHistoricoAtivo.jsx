@@ -17,13 +17,8 @@ ChartJS.register(
   Filler,
   Tooltip,
 )
+// Este componente monta o gráfico HistoricoAtivo.
 
-/**
- * Gráfico da tela Acompanhamento de Ativo: potência média por dia nos
- * últimos 7 dias (RF31). Dias sem leitura ficam vazios.
- *
- * @param {{ dados: { titulo: string, descricao: string, legenda: string, rotulos: string[], potenciaKw: (number|null)[] } }} props
- */
 function GraficoHistoricoAtivo({ dados }) {
   const dadosGrafico = {
     labels: dados.rotulos,

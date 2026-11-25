@@ -1,13 +1,4 @@
-/**
- * AlertaService: geração, resolução, consulta e exportação de alertas.
- *
- * Regras atendidas: RN18, RN29–RN39 e RN41 (status do ativo).
- *
- * Quem chama:
- *  - o simulador, a cada atualização de telemetria (10 s) -> avaliarTelemetria
- *  - o job de offline, a cada minuto                      -> verificarAtivosOffline
- *  - as rotas da tela Gerenciamento de Alertas            -> listar / exportar / resolverManualmente
- */
+
 import { erros } from '../../compartilhado/erros.js'
 import { STATUS_ATIVO } from '../ativos/Ativo.js'
 import { ativoRepositorio } from '../ativos/ativoRepositorio.js'
@@ -20,10 +11,6 @@ import { alertaRepositorio } from './alertaRepositorio.js'
 import { exportadorAlertas } from './exportadorAlertas.js'
 import { condicoesVioladas, TIPOS_ALERTA, tipoAlertaOffline } from './regrasAlerta.js'
 
-/**
- * Aceita os valores da tela ("ativo", "alta", "todos"...) e devolve o valor
- * do banco ("ATIVO", "ALTA") ou null para "Todos/Todas" (RN31).
- */
 function normalizarFiltro(valor, permitidos, nome) {
   if (!valor || ['todos', 'todas', 'all'].includes(String(valor).toLowerCase())) return null
   const normalizado = String(valor).toUpperCase()
@@ -33,11 +20,10 @@ function normalizarFiltro(valor, permitidos, nome) {
   return normalizado
 }
 
+// Esta constante disponibiliza AlertaService para outras partes do projeto.
+
 export const AlertaService = {
-  /**
-   * Cria o alerta se ainda não houver um ATIVO do mesmo tipo para o mesmo
-   * ativo (RN35: evita duplicados enquanto a falha persiste).
-   */
+
   async abrirSeNaoExistir({ tipo, ativoId = null, descricao, momento = new Date() }) {
     const existente = await alertaRepositorio.buscarAtivoPorTipo(tipo, ativoId)
     if (existente) return null
@@ -55,10 +41,6 @@ export const AlertaService = {
     )
   },
 
-  /**
-   * Resolução automática (RN37): só para tipos que permitem e quando a
-   * condição já voltou ao normal. Fica registrada como ação do sistema.
-   */
   async resolverAutomaticamenteSeNormalizou(tipo, ativoId, momento = new Date()) {
     if (!TIPOS_ALERTA[tipo].resolucaoAutomatica) return
     const alerta = await alertaRepositorio.buscarAtivoPorTipo(tipo, ativoId)
@@ -67,18 +49,9 @@ export const AlertaService = {
     await alertaRepositorio.salvarResolucao(alerta)
   },
 
-  /**
-   * Avalia uma nova telemetria de um ativo (RN36). Chamado pelo simulador
-   * a cada 10 s e também na geração do histórico (com `momento` no passado).
-   *
-   * @param {import('../ativos/Ativo.js').Ativo} ativo
-   * @param {import('../ativos/TelemetriaAtual.js').TelemetriaAtual} telemetria
-   * @param {import('../parametros/Configuracao.js').Configuracao} configuracao
-   */
   async avaliarTelemetria(ativo, telemetria, configuracao, momento = new Date()) {
     const violadas = condicoesVioladas(ativo, telemetria)
 
-    // Condições ligadas ao próprio equipamento.
     for (const tipo of ['TEMPERATURA_ELEVADA', 'PICO_TENSAO', 'BATERIA_BAIXA']) {
       if (violadas[tipo]) {
         await this.abrirSeNaoExistir({ tipo, ativoId: ativo.id, descricao: violadas[tipo], momento })
@@ -87,10 +60,8 @@ export const AlertaService = {
       }
     }
 
-    // A telemetria chegou: se havia alerta de offline, a comunicação voltou.
     await this.resolverAutomaticamenteSeNormalizou(tipoAlertaOffline(ativo), ativo.id, momento)
 
-    // Alerta da instalação inteira (sem ativo): consumo acima do limite operacional.
     if (ativo.tipo === TIPO_ATIVO_CONSUMO && configuracao.limiteOperacionalKw !== null) {
       if (telemetria.potenciaConsumidaKw > configuracao.limiteOperacionalKw) {
         await this.abrirSeNaoExistir({
@@ -108,11 +79,6 @@ export const AlertaService = {
     await this.recalcularStatusDoAtivo(ativo)
   },
 
-  /**
-   * Job executado a cada minuto (RN36 / RNF17): ativos sem telemetria há
-   * mais de 60 s ficam OFFLINE e geram alerta de falha de comunicação ou
-   * de sensor offline.
-   */
   async verificarAtivosOffline(agora = new Date()) {
     const [ativos, telemetrias] = await Promise.all([
       ativoRepositorio.listarTodos(),
@@ -138,12 +104,6 @@ export const AlertaService = {
     }
   },
 
-  /**
-   * Status do ativo (RN41) — DECISÃO (DP11):
-   * MANUTENCAO é definido manualmente e não muda sozinho;
-   * com alerta ativo -> ALERTA; sem alerta -> OPERANDO.
-   * (OFFLINE é definido pelo job acima e sai daqui quando a telemetria volta.)
-   */
   async recalcularStatusDoAtivo(ativo) {
     if (ativo.status === STATUS_ATIVO.MANUTENCAO) return
     const alertasAtivos = await alertaRepositorio.contarAtivosDoAtivo(ativo.id)
@@ -154,25 +114,22 @@ export const AlertaService = {
     }
   },
 
-  /** Lista da tela de alertas com filtros combinados (RF21–RF25). */
-  async listar({ status, prioridade } = {}) {
+  async listar({ status, prioridade } = {}, usuarioId = null) {
     const filtros = {
       status: normalizarFiltro(status, Object.values(STATUS_ALERTA), 'status'),
       prioridade: normalizarFiltro(prioridade, Object.values(PRIORIDADES), 'prioridade'),
     }
-    const alertas = await alertaRepositorio.listar(filtros)
-    // RN32: lista vazia é uma resposta normal ([]), nada é alterado no banco.
+    const alertas = await alertaRepositorio.listar({ ...filtros, usuarioId })
+
     return alertas.map((alerta) => alerta.paraResposta())
   },
 
-  /** Card "Alertas Ativos" do Dashboard (RN18). */
-  contarAtivos() {
-    return alertaRepositorio.contarAtivos()
+  contarAtivos(usuarioId = null) {
+    return alertaRepositorio.contarAtivos(usuarioId)
   },
 
-  /** Resolução manual por um usuário (RN37 / RN38). */
   async resolverManualmente(alertaId, usuarioId, ip) {
-    const alerta = await alertaRepositorio.buscarPorId(alertaId)
+    const alerta = await alertaRepositorio.buscarPorId(alertaId, usuarioId)
     if (!alerta) throw erros.naoEncontrado('Alerta não encontrado.')
     if (alerta.status === STATUS_ALERTA.RESOLVIDO) throw erros.conflito('Este alerta já está resolvido.')
 
@@ -186,24 +143,19 @@ export const AlertaService = {
     })
 
     if (alerta.ativoId) {
-      const ativo = await ativoRepositorio.buscarPorId(alerta.ativoId)
+      const ativo = await ativoRepositorio.buscarPorId(alerta.ativoId, usuarioId)
       if (ativo) await this.recalcularStatusDoAtivo(ativo)
     }
     return alerta.paraResposta()
   },
 
-  /**
-   * Exportação do relatório (RF26 / RN39 / RNF21).
-   * DECISÃO (DP10): exporta exatamente os alertas dos filtros aplicados.
-   * Toda exportação fica registrada na auditoria.
-   */
   async exportar({ status, prioridade, formato = 'csv' }, usuarioId, ip) {
     formato = String(formato).toLowerCase()
     if (!exportadorAlertas.formatosSuportados.includes(formato)) {
       throw erros.requisicaoInvalida('Formato inválido. Use csv, pdf ou xlsx.', 'formato')
     }
 
-    const alertas = await this.listar({ status, prioridade })
+    const alertas = await this.listar({ status, prioridade }, usuarioId)
     const arquivo = await exportadorAlertas.gerar(alertas, formato, { status, prioridade })
 
     await AuditoriaService.registrar({

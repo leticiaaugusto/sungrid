@@ -1,9 +1,6 @@
-/**
- * Entidade Chamado (tabela `chamado`) — RN48, RN49, RN50.
- *
- * Todo chamado pertence a um ativo e pode ter sido motivado por um alerta.
- * Fluxo principal (RN50): ABERTO -> EM_ANDAMENTO -> RESOLVIDO.
- */
+
+// Esta constante disponibiliza STATUS_CHAMADO para outras partes do projeto.
+
 export const STATUS_CHAMADO = Object.freeze({
   ABERTO: 'ABERTO',
   EM_ANDAMENTO: 'EM_ANDAMENTO',
@@ -36,7 +33,6 @@ export class Chamado {
     })
   }
 
-  /** Passa de ABERTO para EM_ANDAMENTO (método do diagrama). */
   iniciarAtendimento() {
     if (this.status !== STATUS_CHAMADO.ABERTO) {
       throw new Error('Só é possível iniciar o atendimento de um chamado aberto.')
@@ -44,7 +40,6 @@ export class Chamado {
     this.status = STATUS_CHAMADO.EM_ANDAMENTO
   }
 
-  /** Encerra o chamado gravando a data/hora (RN49). */
   resolver(agora = new Date()) {
     this.status = STATUS_CHAMADO.RESOLVIDO
     this.resolvidoEm = agora

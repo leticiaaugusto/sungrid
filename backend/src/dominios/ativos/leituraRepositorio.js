@@ -1,7 +1,4 @@
-/**
- * Repositório de gravação das leituras históricas (tabela `leitura`).
- * Quem grava é o simulador; quem lê são os repositórios de consumo e de ativos.
- */
+
 import { consultar } from '../../config/banco.js'
 
 const COLUNAS = [
@@ -18,13 +15,10 @@ const COLUNAS = [
   'carga_pct',
 ]
 
+// Esta constante disponibiliza leituraRepositorio para outras partes do projeto.
+
 export const leituraRepositorio = {
-  /**
-   * Insere várias leituras em um único comando.
-   * ON CONFLICT DO NOTHING: se a leitura daquele ativo naquele horário já
-   * existir (índice único ativo_id + data_hora), ela é ignorada (RN17).
-   * @param {import('./Leitura.js').Leitura[]} leituras
-   */
+
   async inserirVarias(leituras) {
     if (leituras.length === 0) return
     const valores = []
@@ -59,7 +53,6 @@ export const leituraRepositorio = {
     return rows[0].total
   },
 
-  /** Última carga registrada da bateria (para o simulador continuar de onde parou). */
   async ultimaCargaBateria() {
     const { rows } = await consultar(
       `SELECT l.carga_pct
