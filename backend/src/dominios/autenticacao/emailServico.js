@@ -18,11 +18,20 @@ const transporte = ambiente.email.host
     })
   : null
 
+async function enviarPeloGoogle({ para, assunto, texto }) {
+  const resposta = await fetch(process.env.EMAIL_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ segredo: process.env.EMAIL_SCRIPT_SEGREDO, para, assunto, texto }),
+  })
+  const corpo = await resposta.text()
+  if (corpo !== 'ok') throw new Error(`Falha ao enviar e-mail pelo Apps Script: ${corpo}`)
+}
+
 // Esta constante disponibiliza emailServico para outras partes do projeto.
 
 export const emailServico = {
   validarDisponibilidade() {
-    if (!transporte && process.env.NODE_ENV === 'production') {
+    if (!transporte && !process.env.EMAIL_SCRIPT_URL && process.env.NODE_ENV === 'production') {
       throw erros.servicoIndisponivel('Recuperação de senha temporariamente indisponível.')
     }
   },
@@ -37,6 +46,11 @@ export const emailServico = {
       '',
       'Se você não fez este pedido, ignore este e-mail.',
     ].join('\n')
+
+    if (process.env.EMAIL_SCRIPT_URL) {
+      await enviarPeloGoogle({ para, assunto: 'SunGrid — redefinição de senha', texto })
+      return
+    }
 
     if (!transporte) {
       if (process.env.NODE_ENV === 'production') {

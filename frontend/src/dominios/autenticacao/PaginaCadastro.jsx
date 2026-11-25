@@ -92,7 +92,11 @@ function PaginaCadastro() {
             onChange={limparErro('email')}
           />
           <div className="auth-field">
-            <label htmlFor="perfil">Perfil</label>
+            <label htmlFor="perfil">
+              Perfil
+              <span className="required-mark" aria-hidden="true">*</span>
+              <span className="sr-only"> obrigatório</span>
+            </label>
             <select id="perfil" name="perfil" required defaultValue="" onChange={limparErro('perfil')}>
               <option value="" disabled>Selecione um perfil</option>
               <option value="OPERADOR">Operador de Rede</option>
