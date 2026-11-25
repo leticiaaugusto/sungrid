@@ -101,6 +101,9 @@ export const AuthService = {
       papel,
       papelSolicitado,
     })
+    if (!existeAdministrador) {
+      await usuarioRepositorio.transferirAtivosDoSimulador(usuario.id)
+    }
     const mensagem = papelSolicitado
       ? 'Conta criada como Operador. Seu pedido para Administrador aguarda aprovação de um administrador.'
       : 'Conta criada com sucesso. Você já pode entrar.'

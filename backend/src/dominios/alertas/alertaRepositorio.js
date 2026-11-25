@@ -12,7 +12,15 @@ const SELECT_COM_ATIVO = `
 export const alertaRepositorio = {
   async buscarPorId(id, usuarioId = null) {
     const sql = usuarioId
-      ? `${SELECT_COM_ATIVO} WHERE al.id = $1 AND a.usuario_id = $2`
+      ? `${SELECT_COM_ATIVO}
+          WHERE al.id = $1
+            AND (
+              a.usuario_id = $2
+              OR (
+                al.ativo_id IS NULL
+                AND EXISTS (SELECT 1 FROM usuario u WHERE u.id = $2 AND u.papel = 'ADMINISTRADOR')
+              )
+            )`
       : `${SELECT_COM_ATIVO} WHERE al.id = $1`
     const { rows } = await consultar(sql, usuarioId ? [id, usuarioId] : [id])
     return Alerta.deLinha(rows[0])
@@ -23,7 +31,14 @@ export const alertaRepositorio = {
       `${SELECT_COM_ATIVO}
         WHERE ($1::varchar IS NULL OR al.status = $1)
           AND ($2::varchar IS NULL OR al.prioridade = $2)
-          AND ($4::int IS NULL OR a.usuario_id = $4)
+          AND (
+            $4::int IS NULL
+            OR a.usuario_id = $4
+            OR (
+              al.ativo_id IS NULL
+              AND EXISTS (SELECT 1 FROM usuario u WHERE u.id = $4 AND u.papel = 'ADMINISTRADOR')
+            )
+          )
         ORDER BY al.criado_em DESC
         LIMIT $3`,
       [status, prioridade, limite, usuarioId],
@@ -67,7 +82,14 @@ export const alertaRepositorio = {
          FROM alerta al
          LEFT JOIN ativo a ON a.id = al.ativo_id
         WHERE al.status = 'ATIVO'
-          AND ($1::int IS NULL OR a.usuario_id = $1)`,
+          AND (
+            $1::int IS NULL
+            OR a.usuario_id = $1
+            OR (
+              al.ativo_id IS NULL
+              AND EXISTS (SELECT 1 FROM usuario u WHERE u.id = $1 AND u.papel = 'ADMINISTRADOR')
+            )
+          )`,
       [usuarioId],
     )
     return { total: rows[0].total, criticos: rows[0].criticos }

@@ -10,7 +10,6 @@ import { TelemetriaAtual } from '../ativos/TelemetriaAtual.js'
 import { telemetriaRepositorio } from '../ativos/telemetriaRepositorio.js'
 import { TIPO_ATIVO_CONSUMO } from '../consumo/fontesDeEnergia.js'
 import { parametrosRepositorio } from '../parametros/parametrosRepositorio.js'
-import { usuarioRepositorio } from '../autenticacao/usuarioRepositorio.js'
 import { proximaCargaBateria, valoresDosAtivos } from './perfilLoja.js'
 
 const MINUTOS_POR_LEITURA = 15
@@ -29,8 +28,7 @@ const arredondar3 = (valor) => (typeof valor === 'number' ? Math.round(valor * 1
 async function principal() {
   const { dias, limpar } = lerArgumentos()
 
-  const usuarioSimulador = await usuarioRepositorio.buscarPorEmail('simulador@sungrid.local')
-  const ativos = await ativoRepositorio.listarTodos(usuarioSimulador?.id)
+  const ativos = await ativoRepositorio.listarTodos()
   if (ativos.length === 0) {
     throw new Error('Nenhum ativo cadastrado. Rode antes o arquivo banco/03_dados_iniciais.sql.')
   }
@@ -49,7 +47,7 @@ async function principal() {
   }
 
   const { rows: usuarios } = await consultar(
-    "SELECT id FROM usuario WHERE papel <> 'SISTEMA' ORDER BY (papel = 'ADMINISTRADOR') DESC, id LIMIT 1",
+    "SELECT id FROM usuario ORDER BY (papel = 'ADMINISTRADOR') DESC, id LIMIT 1",
   )
   const operadorId = usuarios[0]?.id ?? null
 

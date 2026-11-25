@@ -6,7 +6,6 @@ import { leituraRepositorio } from '../ativos/leituraRepositorio.js'
 import { TelemetriaAtual } from '../ativos/TelemetriaAtual.js'
 import { telemetriaRepositorio } from '../ativos/telemetriaRepositorio.js'
 import { parametrosRepositorio } from '../parametros/parametrosRepositorio.js'
-import { usuarioRepositorio } from '../autenticacao/usuarioRepositorio.js'
 import { controleSimulacao } from './controleSimulacao.js'
 import { chaveDoDia, proximaCargaBateria, valoresDosAtivos } from './perfilLoja.js'
 import { ambiente } from '../../config/ambiente.js'
@@ -45,9 +44,8 @@ const media = (lista) => (lista.length ? lista.reduce((soma, valor) => soma + va
 
 async function recarregarCadastro(agora) {
   if (agora - estado.ultimaRecarga < RECARREGAR_CADASTRO_MS && estado.ativos.length) return
-  const usuarioSimulador = await usuarioRepositorio.buscarPorEmail('simulador@sungrid.local')
   ;[estado.ativos, estado.configuracao] = await Promise.all([
-    ativoRepositorio.listarTodos(usuarioSimulador?.id),
+    ativoRepositorio.listarTodos(),
     parametrosRepositorio.buscarConfiguracao(),
   ])
   estado.ultimaRecarga = agora.getTime()

@@ -30,8 +30,20 @@ export const usuarioRepositorio = {
     return rows[0].total
   },
 
+  async transferirAtivosDoSimulador(usuarioId) {
+    await consultar(
+      `UPDATE ativo
+          SET usuario_id = $1
+        WHERE usuario_id = (
+          SELECT id FROM usuario WHERE email = 'simulador@sungrid.local'
+        )
+           OR usuario_id IS NULL`,
+      [usuarioId],
+    )
+  },
+
   async listarTodos() {
-    const { rows } = await consultar("SELECT * FROM usuario WHERE papel <> 'SISTEMA' ORDER BY criado_em DESC")
+    const { rows } = await consultar('SELECT * FROM usuario ORDER BY criado_em DESC')
     return rows.map(Usuario.deLinha)
   },
 

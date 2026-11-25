@@ -24,10 +24,10 @@ export const ativoRepositorio = {
               END AS potencia_atual_kw
          FROM ativo a
          LEFT JOIN telemetria_atual t ON t.ativo_id = a.id
-        WHERE ($3::int IS NULL OR a.usuario_id = $3)
+        WHERE ($2::int IS NULL OR a.usuario_id = $2)
           AND ($1 = '' OR a.codigo ILIKE '%' || $1 || '%' OR a.nome ILIKE '%' || $1 || '%' OR a.tipo ILIKE '%' || $1 || '%')
         ORDER BY a.codigo`,
-      [termo.trim(), usuarioId, usuarioId],
+      [termo.trim(), usuarioId],
     )
     return rows.map((linha) => ({
       ativo: Ativo.deLinha(linha),

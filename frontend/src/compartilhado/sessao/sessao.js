@@ -22,6 +22,10 @@ export function obterUsuario() {
   }
 }
 
+export function atualizarUsuario(usuario) {
+  localStorage.setItem(CHAVE_USUARIO, JSON.stringify(usuario))
+}
+
 export function estaLogado() {
   return Boolean(obterToken())
 }

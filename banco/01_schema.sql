@@ -9,7 +9,7 @@ CREATE TABLE usuario (
     senha_hash  VARCHAR(255) NOT NULL,                 -- hash bcrypt
     cargo       VARCHAR(60),
     papel       VARCHAR(20)  NOT NULL DEFAULT 'OPERADOR'
-                CHECK (papel IN ('OPERADOR', 'ADMINISTRADOR', 'SISTEMA')),
+                CHECK (papel IN ('OPERADOR', 'ADMINISTRADOR')),
     papel_solicitado VARCHAR(20)
                 CHECK (papel_solicitado IN ('OPERADOR', 'ADMINISTRADOR')),
     foto_url    VARCHAR(255),
@@ -35,6 +35,7 @@ CREATE INDEX idx_token_recuperacao_usuario ON token_recuperacao (usuario_id);
 -- Esta parte cria a tabela ativo.
 CREATE TABLE ativo (
     id                      SERIAL       PRIMARY KEY,
+    usuario_id              INT,
     codigo                  VARCHAR(30)  NOT NULL UNIQUE,
     nome                    VARCHAR(120) NOT NULL,
     tipo                    VARCHAR(20)  NOT NULL
@@ -49,7 +50,9 @@ CREATE TABLE ativo (
     tensao_nominal_v        NUMERIC,
     tolerancia_tensao_pct   NUMERIC,
     corrente_max_a          NUMERIC,
-    eficiencia_min_pct      NUMERIC
+    eficiencia_min_pct      NUMERIC,
+    CONSTRAINT ativo_usuario_fk
+        FOREIGN KEY (usuario_id) REFERENCES usuario (id) ON DELETE CASCADE
 );
 
 -- Este índice melhora as buscas em idx_ativo_nome.

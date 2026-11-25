@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Alerta from '../componentes/Alerta.jsx'
-import { obterUsuario } from '../sessao/sessao.js'
+import { atualizarUsuario, obterUsuario } from '../sessao/sessao.js'
 import { mensagemDeErro } from '../utilitarios/formatacao.js'
 import Cabecalho from './Cabecalho.jsx'
 import MenuLateral from './MenuLateral.jsx'
@@ -29,17 +29,30 @@ function LayoutPainel() {
   const [erro, setErro] = useState('')
   const localizacao = useLocation()
   const reduzirMovimento = useReducedMotion()
+  const usuarioId = usuario?.id
+  const papelUsuario = usuario?.papel
 
   // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
-    if (obterUsuario()?.papel === 'OPERADOR') return
     let ativo = true
-    layoutServico.usuarioLogado().then((dados) => ativo && setUsuario(dados)).catch(() => {})
     layoutServico
-      .carbonoDaSemana()
-      .then((dados) => ativo && setCarbono(dados))
-      .catch((falha) => ativo && setErro(mensagemDeErro(falha, 'Não foi possível carregar a pegada de carbono.')))
+      .usuarioLogado()
+      .then((dados) => {
+        if (!ativo) return
+        atualizarUsuario(dados)
+        setUsuario(dados)
+        if (dados.papel === 'OPERADOR') {
+          setAlertasAtivos(null)
+          setCarbono(null)
+          return
+        }
+        layoutServico
+          .carbonoDaSemana()
+          .then((resultado) => ativo && setCarbono(resultado))
+          .catch((falha) => ativo && setErro(mensagemDeErro(falha, 'Não foi possível carregar a pegada de carbono.')))
+      })
+      .catch((falha) => ativo && setErro(mensagemDeErro(falha, 'Não foi possível atualizar o perfil da conta.')))
     return () => {
       ativo = false
     }
@@ -48,7 +61,7 @@ function LayoutPainel() {
   // Este efeito atualiza a tela quando necessário.
 
   useEffect(() => {
-    if (obterUsuario()?.papel === 'OPERADOR') return
+    if (!usuarioId || papelUsuario === 'OPERADOR') return
     let ativo = true
     const atualizar = () =>
       layoutServico
@@ -62,7 +75,7 @@ function LayoutPainel() {
       ativo = false
       window.clearInterval(intervalo)
     }
-  }, [])
+  }, [usuarioId, papelUsuario])
 
   return (
     <div className="dashboard-shell">
