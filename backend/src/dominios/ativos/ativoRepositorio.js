@@ -1,6 +1,6 @@
 
 import { FUSO_HORARIO } from '../../config/ambiente.js'
-import { consultar } from '../../config/banco.js'
+import { consultar, emTransacao } from '../../config/banco.js'
 import { Ativo } from './Ativo.js'
 
 // Esta constante disponibiliza ativoRepositorio para outras partes do projeto.
@@ -14,7 +14,7 @@ export const ativoRepositorio = {
     return rows.map(Ativo.deLinha)
   },
 
-  async listarComTelemetria(termo = '', usuarioId = null) {
+  async listarComTelemetria(termo = '', usuario) {
     const { rows } = await consultar(
       `SELECT a.*,
               t.atualizado_em,
@@ -24,10 +24,21 @@ export const ativoRepositorio = {
               END AS potencia_atual_kw
          FROM ativo a
          LEFT JOIN telemetria_atual t ON t.ativo_id = a.id
-        WHERE ($2::int IS NULL OR a.usuario_id = $2)
+        WHERE (
+                ($3 = 'ADMINISTRADOR' AND a.usuario_id = $2)
+                OR ($3 = 'OPERADOR' AND (
+                  a.usuario_id = $2
+                  OR EXISTS (
+                    SELECT 1
+                      FROM ativo_operador ao
+                     WHERE ao.ativo_id = a.id
+                       AND ao.operador_id = $2
+                  )
+                ))
+              )
           AND ($1 = '' OR a.codigo ILIKE '%' || $1 || '%' OR a.nome ILIKE '%' || $1 || '%' OR a.tipo ILIKE '%' || $1 || '%')
         ORDER BY a.codigo`,
-      [termo.trim(), usuarioId],
+      [termo.trim(), usuario.id, usuario.papel],
     )
     return rows.map((linha) => ({
       ativo: Ativo.deLinha(linha),
@@ -106,6 +117,76 @@ export const ativoRepositorio = {
       : 'SELECT * FROM ativo WHERE id = $1'
     const { rows } = await consultar(sql, usuarioId ? [id, usuarioId] : [id])
     return Ativo.deLinha(rows[0])
+  },
+
+  async buscarPorIdComAcesso(id, usuario) {
+    const { rows } = await consultar(
+      `SELECT a.*
+         FROM ativo a
+        WHERE a.id = $1
+          AND (
+            ($3 = 'ADMINISTRADOR' AND a.usuario_id = $2)
+            OR ($3 = 'OPERADOR' AND (
+              a.usuario_id = $2
+              OR EXISTS (
+                SELECT 1
+                  FROM ativo_operador ao
+                 WHERE ao.ativo_id = a.id
+                   AND ao.operador_id = $2
+              )
+            ))
+          )`,
+      [id, usuario.id, usuario.papel],
+    )
+    return Ativo.deLinha(rows[0])
+  },
+
+  async listarAtribuicaoOperador(administradorId, operadorId) {
+    const { rows } = await consultar(
+      `SELECT a.id, a.codigo, a.nome, a.tipo,
+              (ao.ativo_id IS NOT NULL) AS atribuido
+         FROM ativo a
+         LEFT JOIN ativo_operador ao
+           ON ao.ativo_id = a.id
+          AND ao.operador_id = $2
+        WHERE a.usuario_id = $1
+        ORDER BY a.codigo`,
+      [administradorId, operadorId],
+    )
+    return rows
+  },
+
+  async substituirAtivosDoOperador(administradorId, operadorId, ativoIds) {
+    return emTransacao(async (cliente) => {
+      const { rows } = await cliente.query(
+        'SELECT id FROM ativo WHERE usuario_id = $1 AND id = ANY($2::int[])',
+        [administradorId, ativoIds],
+      )
+      if (rows.length !== ativoIds.length) return false
+
+      await cliente.query(
+        `DELETE FROM ativo_operador ao
+          USING ativo a
+         WHERE ao.ativo_id = a.id
+           AND ao.operador_id = $2
+           AND a.usuario_id = $1
+           AND NOT (a.id = ANY($3::int[]))`,
+        [administradorId, operadorId, ativoIds],
+      )
+
+      if (ativoIds.length > 0) {
+        await cliente.query(
+          `INSERT INTO ativo_operador (ativo_id, operador_id, atribuido_por)
+           SELECT ativos.ativo_id, $2, $3
+             FROM UNNEST($1::int[]) AS ativos(ativo_id)
+           ON CONFLICT (ativo_id, operador_id)
+           DO UPDATE SET atribuido_por = EXCLUDED.atribuido_por, atribuido_em = now()`,
+          [ativoIds, operadorId, administradorId],
+        )
+      }
+
+      return true
+    })
   },
 
   async buscar(termo, limite = 10) {

@@ -13,6 +13,12 @@ function PaginaUsuarios() {
   const [usuarios, setUsuarios] = useState([])
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
+  const [operadorSelecionado, setOperadorSelecionado] = useState(null)
+  const [ativosAtribuiveis, setAtivosAtribuiveis] = useState([])
+  const [idsAtivosSelecionados, setIdsAtivosSelecionados] = useState([])
+  const [carregandoAtribuicao, setCarregandoAtribuicao] = useState(false)
+  const [falhaCarregamentoAtivos, setFalhaCarregamentoAtivos] = useState(false)
+  const [salvandoAtribuicao, setSalvandoAtribuicao] = useState(false)
 // Esta função grava ou atualiza os dados.
 
   async function atualizar() {
@@ -50,6 +56,48 @@ function PaginaUsuarios() {
       await atualizar()
     } catch (falha) {
       setErro(mensagemDeErro(falha, 'Não foi possível alterar o perfil.'))
+    }
+  }
+
+  async function abrirAtribuicao(usuario) {
+    setErro('')
+    setMensagem('')
+    setOperadorSelecionado(usuario)
+    setAtivosAtribuiveis([])
+    setIdsAtivosSelecionados([])
+    setFalhaCarregamentoAtivos(false)
+    setCarregandoAtribuicao(true)
+    try {
+      const ativos = await usuariosServico.listarAtivosDoOperador(usuario.id)
+      setAtivosAtribuiveis(ativos)
+      setIdsAtivosSelecionados(ativos.filter((ativo) => ativo.atribuido).map((ativo) => ativo.id))
+    } catch (falha) {
+      setFalhaCarregamentoAtivos(true)
+      setErro(mensagemDeErro(falha, 'Não foi possível carregar os ativos disponíveis.'))
+    } finally {
+      setCarregandoAtribuicao(false)
+    }
+  }
+
+  function alternarAtivo(ativoId, selecionado) {
+    setIdsAtivosSelecionados((atuais) =>
+      selecionado ? [...atuais, ativoId] : atuais.filter((id) => id !== ativoId),
+    )
+  }
+
+  async function salvarAtribuicao() {
+    if (!operadorSelecionado) return
+    setErro('')
+    setMensagem('')
+    setSalvandoAtribuicao(true)
+    try {
+      await usuariosServico.atribuirAtivosAoOperador(operadorSelecionado.id, idsAtivosSelecionados)
+      setMensagem(`Ativos atualizados para ${operadorSelecionado.nome}.`)
+      setOperadorSelecionado(null)
+    } catch (falha) {
+      setErro(mensagemDeErro(falha, 'Não foi possível salvar os ativos do operador.'))
+    } finally {
+      setSalvandoAtribuicao(false)
     }
   }
 
@@ -107,6 +155,15 @@ function PaginaUsuarios() {
                         </button>
                       </>
                     )}
+                    {usuario.papel === 'OPERADOR' && (
+                      <button
+                        className="users-assignment-button"
+                        type="button"
+                        onClick={() => abrirAtribuicao(usuario)}
+                      >
+                        Atribuir ativos
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -114,6 +171,49 @@ function PaginaUsuarios() {
           </table>
         </div>
       </div>
+      {operadorSelecionado && (
+        <div className="asset-modal" role="dialog" aria-modal="true" aria-label="Atribuir ativos ao operador">
+          <div className="asset-modal__card users-assignment-modal">
+            <h2>Ativos de {operadorSelecionado.nome}</h2>
+            <p>Selecione quais ativos este operador poderá acompanhar.</p>
+            {carregandoAtribuicao ? (
+              <p role="status">Carregando ativos...</p>
+            ) : ativosAtribuiveis.length > 0 ? (
+              <div className="users-assets-list">
+                {ativosAtribuiveis.map((ativo) => (
+                  <label key={ativo.id}>
+                    <input
+                      type="checkbox"
+                      checked={idsAtivosSelecionados.includes(ativo.id)}
+                      onChange={(evento) => alternarAtivo(ativo.id, evento.target.checked)}
+                    />
+                    <span><strong>{ativo.codigo}</strong> · {ativo.nome} ({ativo.tipo})</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p>Nenhum ativo pertence a esta conta administradora.</p>
+            )}
+            <div className="asset-modal__actions">
+              <button
+                className="asset-action-button asset-action-button--secondary"
+                type="button"
+                onClick={() => setOperadorSelecionado(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="asset-action-button asset-action-button--primary"
+                type="button"
+                disabled={carregandoAtribuicao || falhaCarregamentoAtivos || salvandoAtribuicao}
+                onClick={salvarAtribuicao}
+              >
+                {salvandoAtribuicao ? 'Salvando...' : 'Salvar atribuições'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

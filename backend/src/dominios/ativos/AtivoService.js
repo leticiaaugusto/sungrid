@@ -4,6 +4,7 @@ import { arredondar, hoje, somarDias } from '../../compartilhado/tempo.js'
 import { ACOES_AUDITADAS } from '../auditoria/Auditoria.js'
 import { AuditoriaService } from '../auditoria/AuditoriaService.js'
 import { controleSimulacao } from '../simulador/controleSimulacao.js'
+import { usuarioRepositorio } from '../autenticacao/usuarioRepositorio.js'
 import { STATUS_ATIVO, TIPOS_ATIVO } from './Ativo.js'
 import { ativoRepositorio } from './ativoRepositorio.js'
 import { telemetriaRepositorio } from './telemetriaRepositorio.js'
@@ -12,9 +13,9 @@ const DIAS_HISTORICO_PADRAO = 7
 const DIAS_HISTORICO_MAXIMO = 31
 // Esta função busca os dados necessários.
 
-async function buscarOuFalhar(id, usuarioId) {
+async function buscarOuFalhar(id, usuario) {
   const numero = Number(id)
-  const ativo = Number.isInteger(numero) ? await ativoRepositorio.buscarPorId(numero, usuarioId) : null
+  const ativo = Number.isInteger(numero) ? await ativoRepositorio.buscarPorIdComAcesso(numero, usuario) : null
   if (!ativo) throw erros.naoEncontrado('Ativo não encontrado.')
   return ativo
 }
@@ -29,6 +30,12 @@ function numeroOpcional(valor) {
   if (valor === null || valor === '' || valor === undefined) return null
   const numero = Number(valor)
   return Number.isFinite(numero) ? numero : null
+}
+
+function validarIdOperador(id) {
+  const numero = Number(id)
+  if (!Number.isSafeInteger(numero) || numero < 1) throw erros.naoEncontrado('Operador não encontrado.')
+  return numero
 }
 
 function validarDadosAtivo(dados) {
@@ -61,9 +68,9 @@ function validarDadosAtivo(dados) {
 
 export const AtivoService = {
 
-  async buscar(termo, usuarioId) {
+  async buscar(termo, usuario) {
     termo = typeof termo === 'string' ? termo.trim() : ''
-    const registros = await ativoRepositorio.listarComTelemetria(termo, usuarioId)
+    const registros = await ativoRepositorio.listarComTelemetria(termo, usuario)
     return registros.map(({ ativo, potenciaAtualKw, atualizadoEm }) => {
       const resposta = ativo.paraResposta()
       const agora = Date.now()
@@ -77,12 +84,12 @@ export const AtivoService = {
     })
   },
 
-  async detalhar(id, usuarioId) {
-    return (await buscarOuFalhar(id, usuarioId)).paraResposta()
+  async detalhar(id, usuario) {
+    return (await buscarOuFalhar(id, usuario)).paraResposta()
   },
 
-  async telemetria(id, usuarioId) {
-    const ativo = await buscarOuFalhar(id, usuarioId)
+  async telemetria(id, usuario) {
+    const ativo = await buscarOuFalhar(id, usuario)
     const telemetria = await telemetriaRepositorio.buscarPorAtivo(ativo.id)
     if (!telemetria) {
       return { ativoId: ativo.id, disponivel: false, desatualizada: true, mensagem: 'Ativo ainda não enviou telemetria.' }
@@ -109,8 +116,8 @@ export const AtivoService = {
     }
   },
 
-  async historico(id, dias = DIAS_HISTORICO_PADRAO, usuarioId) {
-    const ativo = await buscarOuFalhar(id, usuarioId)
+  async historico(id, dias = DIAS_HISTORICO_PADRAO, usuario) {
+    const ativo = await buscarOuFalhar(id, usuario)
     dias = Number(dias)
     if (!Number.isInteger(dias) || dias < 1 || dias > DIAS_HISTORICO_MAXIMO) {
       throw erros.requisicaoInvalida(`Informe dias entre 1 e ${DIAS_HISTORICO_MAXIMO}.`, 'dias')
@@ -152,7 +159,7 @@ export const AtivoService = {
   },
 
   async editar(id, dados, usuarioId, ip) {
-    const atual = await buscarOuFalhar(id, usuarioId)
+    const atual = await buscarOuFalhar(id, { id: usuarioId, papel: 'ADMINISTRADOR' })
     const normalizados = validarDadosAtivo(dados)
     const comMesmoCodigo = await ativoRepositorio.buscarCodigo(normalizados.codigo, usuarioId)
     if (comMesmoCodigo && comMesmoCodigo.id !== atual.id) {
@@ -168,16 +175,16 @@ export const AtivoService = {
     return ativo.paraResposta()
   },
 
-  async reiniciar(id, usuarioId, ip) {
-    const ativo = await buscarOuFalhar(id, usuarioId)
+  async reiniciar(id, usuario, ip) {
+    const ativo = await buscarOuFalhar(id, usuario)
     const alvo = { entidade: 'ativo', id: ativo.id }
 
-    await AuditoriaService.registrar({ usuarioId, acao: ACOES_AUDITADAS.REINICIO_SOLICITADO, alvo, ip })
+    await AuditoriaService.registrar({ usuarioId: usuario.id, acao: ACOES_AUDITADAS.REINICIO_SOLICITADO, alvo, ip })
 
     const motivo = ativo.motivoParaNaoReiniciar()
     if (motivo) {
       await AuditoriaService.registrar({
-        usuarioId,
+        usuarioId: usuario.id,
         acao: ACOES_AUDITADAS.REINICIO_RECUSADO,
         alvo,
         ip,
@@ -189,7 +196,7 @@ export const AtivoService = {
     const recebido = controleSimulacao.reiniciarAtivo(ativo.id)
     const resultado = recebido ? 'CONCLUIDO' : 'SEM_CONFIRMACAO'
     await AuditoriaService.registrar({
-      usuarioId,
+      usuarioId: usuario.id,
       acao: ACOES_AUDITADAS.REINICIO_CONCLUIDO,
       alvo,
       ip,
@@ -202,5 +209,41 @@ export const AtivoService = {
         ? `Reinício de ${ativo.codigo} executado (simulação). O ativo volta a enviar dados em instantes.`
         : `Solicitação de reinício de ${ativo.codigo} registrada, mas o simulador não está ativo nesta API para confirmar a execução.`,
     }
+  },
+
+  async listarAtribuicaoOperador(administradorId, operadorId) {
+    operadorId = validarIdOperador(operadorId)
+    const operador = await usuarioRepositorio.buscarPorId(operadorId)
+    if (!operador || operador.papel !== 'OPERADOR') {
+      throw erros.naoEncontrado('Operador não encontrado.')
+    }
+    return ativoRepositorio.listarAtribuicaoOperador(administradorId, operadorId)
+  },
+
+  async atribuirAtivosAoOperador(administradorId, operadorId, ativoIds, ip) {
+    operadorId = validarIdOperador(operadorId)
+    const operador = await usuarioRepositorio.buscarPorId(operadorId)
+    if (!operador || operador.papel !== 'OPERADOR') {
+      throw erros.naoEncontrado('Operador não encontrado.')
+    }
+    if (!Array.isArray(ativoIds)) {
+      throw erros.requisicaoInvalida('Informe a lista de ativos atribuídos.', 'ativoIds')
+    }
+    const ids = [...new Set(ativoIds.map((id) => Number(id)))]
+    if (ids.some((id) => !Number.isSafeInteger(id) || id < 1)) {
+      throw erros.requisicaoInvalida('A lista contém um ativo inválido.', 'ativoIds')
+    }
+    const atualizada = await ativoRepositorio.substituirAtivosDoOperador(administradorId, operadorId, ids)
+    if (!atualizada) {
+      throw erros.requisicaoInvalida('Selecione somente ativos pertencentes a esta conta administradora.', 'ativoIds')
+    }
+    await AuditoriaService.registrar({
+      usuarioId: administradorId,
+      acao: ACOES_AUDITADAS.ATIVOS_ATRIBUIDOS,
+      alvo: { entidade: 'usuario', id: operadorId },
+      ip,
+      detalhes: { ativoIds: ids },
+    })
+    return { mensagem: 'Atribuição de ativos atualizada.' }
   },
 }

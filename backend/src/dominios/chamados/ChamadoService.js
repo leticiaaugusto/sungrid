@@ -14,8 +14,8 @@ const TAMANHO_MAXIMO_DESCRICAO = 500
 
 export const ChamadoService = {
 
-  async abrir(ativoId, usuarioId, { descricao, alertaId } = {}, ip) {
-    const ativo = await ativoRepositorio.buscarPorId(ativoId, usuarioId)
+  async abrir(ativoId, usuario, { descricao, alertaId } = {}, ip) {
+    const ativo = await ativoRepositorio.buscarPorIdComAcesso(ativoId, usuario)
     if (!ativo) throw erros.naoEncontrado('Ativo não encontrado.')
 
     let alerta = null
@@ -41,10 +41,10 @@ export const ChamadoService = {
       throw erros.requisicaoInvalida(`A descrição deve ter até ${TAMANHO_MAXIMO_DESCRICAO} caracteres.`, 'descricao')
     }
 
-    const chamado = await chamadoRepositorio.inserir(ativo.abrirChamado(usuarioId, texto, alerta?.id ?? null))
+    const chamado = await chamadoRepositorio.inserir(ativo.abrirChamado(usuario.id, texto, alerta?.id ?? null))
 
     await AuditoriaService.registrar({
-      usuarioId,
+      usuarioId: usuario.id,
       acao: ACOES_AUDITADAS.CHAMADO_ABERTO,
       alvo: { entidade: 'chamado', id: chamado.id },
       ip,

@@ -8,6 +8,7 @@ export function autorizar(acao) {
   return async (req, _res, next) => {
     const usuario = await usuarioRepositorio.buscarPorId(req.usuario?.id)
     if (!usuario) throw erros.naoAutenticado()
+    req.usuario.papel = usuario.papel
     const permissoes = PERMISSOES_POR_PAPEL[usuario.papel] ?? []
     if (!permissoes.includes(acao)) {
       throw erros.semPermissao()

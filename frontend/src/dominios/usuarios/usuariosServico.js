@@ -24,4 +24,10 @@ export const usuariosServico = {
   alterarPapel(id, papel) {
     return requisicaoApi(`/usuarios/${encodeURIComponent(id)}/papel`, { metodo: 'PATCH', corpo: { papel } })
   },
+  listarAtivosDoOperador(id) {
+    return requisicaoApi(`/usuarios/${encodeURIComponent(id)}/ativos`)
+  },
+  atribuirAtivosAoOperador(id, ativoIds) {
+    return requisicaoApi(`/usuarios/${encodeURIComponent(id)}/ativos`, { metodo: 'PUT', corpo: { ativoIds } })
+  },
 }

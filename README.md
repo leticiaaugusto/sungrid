@@ -54,6 +54,7 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de:
 4. Para bancos criados antes desta versão, rode também `banco/04_perfis_usuario.sql`.
 5. Em bancos criados antes da separação por usuário, rode também `banco/05_isolamento_usuario.sql`.
 6. Depois de criar a conta administradora, rode `banco/06_dados_simulador_administrador.sql` para vincular ou restaurar os ativos simulados nessa conta.
+7. Rode `banco/07_atribuir_ativos_operadores.sql` para permitir que o administrador escolha os ativos visíveis para cada operador.
 
 ### 2. Backend (API)
 
@@ -129,6 +130,7 @@ Arquivo principal: `backend/src/dominios/simulador/perfilLoja.js` (só matemáti
 | `GET /ativos?busca=`, `GET /ativos/:id`, `GET /ativos/:id/telemetria`, `GET /ativos/:id/historico?dias=7`, `POST /ativos/:id/reiniciar`, `POST /ativos/:id/chamados` | Acompanhamento de Ativo |
 | `POST /ativos`, `PUT /ativos/:id` | Cadastro/edição de ativo (administrador) |
 | `GET /usuarios`, `PATCH /usuarios/:id/papel` | Administração de usuários |
+| `GET /usuarios/:id/ativos`, `PUT /usuarios/:id/ativos` | Atribuição de ativos a operadores (administrador) |
 | `PATCH /usuarios/me`, `PUT /usuarios/me/senha` | Minha Conta |
 | `GET /chamados?status=` | Chamados |
 | `GET /usuarios/me/dados`, `DELETE /usuarios/me` | Conta (LGPD) |

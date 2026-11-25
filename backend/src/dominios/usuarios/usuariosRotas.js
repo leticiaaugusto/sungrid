@@ -4,6 +4,7 @@ import { autenticar } from '../../compartilhado/middlewares/autenticar.js'
 import { autorizar } from '../../compartilhado/middlewares/autorizar.js'
 import { AuthService } from '../autenticacao/AuthService.js'
 import { ACOES } from '../autenticacao/permissoes.js'
+import { AtivoService } from '../ativos/AtivoService.js'
 
 // Esta constante disponibiliza usuariosRotas para outras partes do projeto.
 
@@ -29,6 +30,21 @@ usuariosRotas.delete('/me', async (req, res) => {
 
 usuariosRotas.get('/', autorizar(ACOES.GERENCIAR_USUARIOS), async (req, res) => {
   res.json(await AuthService.listarUsuarios())
+})
+
+usuariosRotas.get('/:id/ativos', autorizar(ACOES.GERENCIAR_USUARIOS), async (req, res) => {
+  res.json(await AtivoService.listarAtribuicaoOperador(req.usuario.id, Number(req.params.id)))
+})
+
+usuariosRotas.put('/:id/ativos', autorizar(ACOES.GERENCIAR_USUARIOS), async (req, res) => {
+  res.json(
+    await AtivoService.atribuirAtivosAoOperador(
+      req.usuario.id,
+      Number(req.params.id),
+      req.body?.ativoIds,
+      req.ip,
+    ),
+  )
 })
 
 usuariosRotas.patch('/:id/papel', autorizar(ACOES.GERENCIAR_USUARIOS), async (req, res) => {

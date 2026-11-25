@@ -11,24 +11,24 @@ import { AtivoService } from './AtivoService.js'
 export const ativoRotas = Router()
 ativoRotas.use(autenticar)
 
-ativoRotas.get('/', async (req, res) => {
-  res.json(await AtivoService.buscar(req.query.busca, req.usuario.id))
+ativoRotas.get('/', autorizar(ACOES.CONSULTAR_MONITORAMENTO), async (req, res) => {
+  res.json(await AtivoService.buscar(req.query.busca, req.usuario))
 })
 
 ativoRotas.post('/', autorizar(ACOES.GERENCIAR_ATIVOS), async (req, res) => {
   res.status(201).json(await AtivoService.criar(req.body ?? {}, req.usuario.id, req.ip))
 })
 
-ativoRotas.get('/:id', async (req, res) => {
-  res.json(await AtivoService.detalhar(req.params.id, req.usuario.id))
+ativoRotas.get('/:id', autorizar(ACOES.CONSULTAR_MONITORAMENTO), async (req, res) => {
+  res.json(await AtivoService.detalhar(req.params.id, req.usuario))
 })
 
-ativoRotas.get('/:id/telemetria', async (req, res) => {
-  res.json(await AtivoService.telemetria(req.params.id, req.usuario.id))
+ativoRotas.get('/:id/telemetria', autorizar(ACOES.CONSULTAR_MONITORAMENTO), async (req, res) => {
+  res.json(await AtivoService.telemetria(req.params.id, req.usuario))
 })
 
-ativoRotas.get('/:id/historico', async (req, res) => {
-  res.json(await AtivoService.historico(req.params.id, req.query.dias ?? 7, req.usuario.id))
+ativoRotas.get('/:id/historico', autorizar(ACOES.CONSULTAR_MONITORAMENTO), async (req, res) => {
+  res.json(await AtivoService.historico(req.params.id, req.query.dias ?? 7, req.usuario))
 })
 
 ativoRotas.put('/:id', autorizar(ACOES.GERENCIAR_ATIVOS), async (req, res) => {
@@ -36,10 +36,10 @@ ativoRotas.put('/:id', autorizar(ACOES.GERENCIAR_ATIVOS), async (req, res) => {
 })
 
 ativoRotas.post('/:id/reiniciar', autorizar(ACOES.REINICIAR_ATIVO), async (req, res) => {
-  res.json(await AtivoService.reiniciar(req.params.id, req.usuario.id, req.ip))
+  res.json(await AtivoService.reiniciar(req.params.id, req.usuario, req.ip))
 })
 
 ativoRotas.post('/:id/chamados', autorizar(ACOES.ABRIR_CHAMADO), async (req, res) => {
-  const resultado = await ChamadoService.abrir(Number(req.params.id), req.usuario.id, req.body ?? {}, req.ip)
+  const resultado = await ChamadoService.abrir(Number(req.params.id), req.usuario, req.body ?? {}, req.ip)
   res.status(201).json(resultado)
 })
