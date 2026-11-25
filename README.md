@@ -68,6 +68,17 @@ Abra o `.env` e preencha pelo menos:
 
 - `DATABASE_URL`: no Supabase, clique em **Connect** → **Session pooler** e copie a string (troque `[YOUR-PASSWORD]` pela senha do banco).
 - `JWT_SEGREDO`: um texto longo e aleatório.
+- `URL_FRONTEND`: endereço público do frontend, sem barra final (por exemplo, `https://sungrid-6sj7.onrender.com`).
+- `NODE_ENV=production` no serviço backend de produção, para desativar o fallback local que imprime links de recuperação nos logs.
+
+Para enviar os links de recuperação por e-mail, configure também as credenciais SMTP do provedor:
+
+- `SMTP_HOST`: servidor SMTP do provedor.
+- `SMTP_PORTA`: normalmente `587` (STARTTLS) ou `465` (TLS).
+- `SMTP_USUARIO` e `SMTP_SENHA`: credenciais SMTP; no Gmail, use uma senha de app, não a senha normal da conta.
+- `EMAIL_REMETENTE`: nome e endereço autorizados pelo provedor, por exemplo `SunGrid <nao-responda@seudominio.com>`.
+
+Sem `SMTP_HOST`, em desenvolvimento o link é exibido no terminal onde a API está rodando; nenhum e-mail é enviado. Em produção, a API retorna indisponibilidade para a recuperação em vez de registrar o link. Configure SMTP e `NODE_ENV=production` nas configurações de ambiente do serviço backend (por exemplo, no Render), não no frontend.
 
 Opcionalmente, configure os intervalos do simulador:
 

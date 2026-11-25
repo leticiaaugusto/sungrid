@@ -19,4 +19,5 @@ export const erros = {
     new ErroAplicacao(mensagem, 403),
   naoEncontrado: (mensagem = 'Registro não encontrado.') => new ErroAplicacao(mensagem, 404),
   conflito: (mensagem, campo) => new ErroAplicacao(mensagem, 409, campo),
+  servicoIndisponivel: (mensagem = 'Serviço temporariamente indisponível.') => new ErroAplicacao(mensagem, 503),
 }

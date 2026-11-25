@@ -115,6 +115,7 @@ export const AuthService = {
     if (!FORMATO_EMAIL.test(email)) {
       throw erros.requisicaoInvalida('Digite um endereço de e-mail válido.', 'email')
     }
+    emailServico.validarDisponibilidade()
 
     const usuario = await usuarioRepositorio.buscarPorEmail(email)
     if (usuario) {
